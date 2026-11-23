@@ -192,3 +192,5 @@ a.identity:hover{color:var(--red)}
   .mobile-row .m-deadline small{display:block;color:var(--quiet);font:10px system-ui;margin-top:2px}
   .mobile-row .m-deadline.safe{color:var(--quiet)}
 }
+
+.site-days{color:var(--red);font:700 10px var(--mono);white-space:nowrap}

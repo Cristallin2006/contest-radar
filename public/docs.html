@@ -7,7 +7,7 @@
 <meta name="description" content="竞赛雷达数据免责声明与公开 API v1 文档。时间、地区、赛制等信息可能存在缺失或误差，请以主办方官网为准。">
 <title>文档与 API · 竞赛雷达</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/docs.css?v=20261123a">
+<link rel="stylesheet" href="/docs.css?v=20261123b">
 </head>
 <body>
 <header class="doc-top">
@@ -59,7 +59,7 @@
 
       <section id="refresh">
         <h2>更新与审核</h2>
-        <p>采集器定期抓取公开来源，新内容默认进入待审核区，审核后才会公开。公开记录会显示来源和最后核实时间；没有核实时间不代表内容已过期，也不代表内容正确。</p>
+        <p>采集器默认每 6 小时自动抓取一次公开来源，并把新内容送入待审核区；新赛事和时间变更不会自动越过审核直接公开。公开记录会显示来源和最后核实时间；没有核实时间不代表内容已过期，也不代表内容正确。</p>
         <p>分类（类别 / 方向 / 内容类型）为辅助信息，可能存在误判，管理员可手动修正。</p>
       </section>
 
@@ -148,8 +148,10 @@ curl 'https://contest.07212006.xyz/api/v1/editions/232'</code></pre>
 
   <footer class="doc-footer">
     <span>竞赛雷达 · 数据聚合工具，非赛事主办方；信息请自行核实。</span>
+    <span class="site-days" data-site-days>本站已运行 — 天</span>
     <span><a href="/hall">竞赛馆</a> · <a href="/">线路图</a> · <a href="https://github.com/Cristallin2006/contest-radar" target="_blank" rel="noreferrer">GitHub</a></span>
   </footer>
 </main>
+<script src="/site-days.js?v=20261123a" defer></script>
 </body>
 </html>

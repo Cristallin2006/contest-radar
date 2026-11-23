@@ -79,3 +79,5 @@ button { cursor: pointer; }
 @media (max-width: 700px) {
   .submit-section-head { align-items: flex-start; flex-direction: column; gap: 3px; }
 }
+
+.site-days{color:var(--red);font:700 10px var(--mono);white-space:nowrap}

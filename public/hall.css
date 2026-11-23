@@ -166,3 +166,5 @@ body.detail-open { overflow: hidden; }
 }
 .hall-more { display:block; width:100%; margin-top:8px; border:1px dashed var(--strong); background:#fbf9f1; color:var(--green); padding:7px; border-radius:3px; font-size:11px; }
 .hall-more:hover { background:#eef2e8; border-color:#8fa495; }
+
+.site-days{color:var(--red);font:700 10px var(--mono);white-space:nowrap}
