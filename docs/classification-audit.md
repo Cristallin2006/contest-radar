@@ -1,7 +1,7 @@
 # 竞赛方向分类与内容类型：实现与离线核实
 
 - 日期：2026-11-23
-- 状态：**代码已实现并离线验证，尚未部署到线上 VPS**
+- 状态：**已部署并完成线上验证（schema v3）**
 - 目标：把原来的 `academic` 大类拆成可精确过滤的方向，同时先排除志愿者、活动、课程等非竞赛内容。
 
 ## 1. 两层分类
@@ -89,7 +89,7 @@ field_confidence   high 84 / medium 147 / low 0
 | electronics | 9 | 电子 / 自动化 / 通信 |
 | engineering | 4 | 机械 / 结构 / 船舶 / 土木 |
 | science | 10 | 物理 / 医学 / 生命 / 地理 |
-| design | 33 | 设计 / 艺术 / 文创 |
+| design | 33 | 设计 / 艺术 / 文创（公开 32，另 1 条活动隐藏） |
 | business | 25 | 商科 / 金融 / 管理 / 创业 |
 | language | 44 | 英语 / 翻译 / 写作 / 语言文字 |
 | humanities | 8 | 文学 / 法律 / 教育 / 文化 |
@@ -177,12 +177,17 @@ npm test
 - 公开接口隐藏非竞赛内容
 - 迁移回填幂等（第二次 classified=0）
 
-## 8. 部署状态
+## 8. 部署验证
 
-**尚未部署。** 下一步需要在确认分类结果后：
+已于 2026-11-23 部署：
 
-1. 备份线上数据库
+1. 备份线上数据库：`data/backups/pre-classification-20261123-190559.db`
 2. 部署 schema v3 / classifier / UI
-3. 启动时自动回填
-4. 检查公开数量、方向分布、非竞赛内容是否隐藏
-5. 发现问题可回滚数据库和代码
+3. 启动时自动回填 231 条
+4. 公开 API：`229` 条，`KPL` / 公益短视频均为 0
+5. 方向分布：software 53、language 44、design 32、business 25、cyber 18、math 12、science 10、electronics 9、humanities 8、data 8、other 6、engineering 4
+6. 技术向：104 条
+7. 待审核：0
+8. 测试：28 passed
+
+部署后修正了赛氪 `big_data` / `match` / `computer` / `ai` 来源分类过宽的问题，避免 C++/物联网被归到数据、数据分析被归到其他、CRH 数据赛道被归到软件。修正后回填 5 条，第二次回填为 0。
