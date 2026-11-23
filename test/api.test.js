@@ -203,3 +203,9 @@ test("sitemap, robots, and changes page are publicly reachable", async () => {
   assert.equal(changes.status, 200);
   assert.match(await changes.text(), /公开变更记录/);
 });
+
+test("timeline preview route is publicly reachable", async () => {
+  const response = await fetch(`${BASE}/timeline`);
+  assert.equal(response.status, 200);
+  assert.match(await response.text(), /赛事线路图/);
+});

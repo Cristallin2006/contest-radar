@@ -24,6 +24,10 @@ freebie-radar 是一个“多源采集 + 信息雷达 + AI 过滤 + 管理审核
 - 浏览器本地收藏、本地画像与匹配评分
 - 匿名访问、单管理员令牌、SQLite 备份与恢复
 
+## 前端视觉参考
+
+赛事线路图 `/timeline` 的视觉方向来自项目设计预览；其中使用的 Phosphor Icons 遵循 MIT License，完整声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
 ## 许可证
 
 本仓库继续使用 MIT License。完整的原始版权声明和许可文本见 [LICENSE](LICENSE)。

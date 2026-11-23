@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN" data-header="index">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="description" content="竞赛雷达赛事线路图：按报名截止、初赛和决赛日期查看国内与国外竞赛，支持筛选、搜索和本地收藏。">
+<title>赛事线路图 · 竞赛雷达</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/timeline.css?v=20261123b">
+</head>
+<body>
+<!-- Icons: Phosphor Icons (MIT, Copyright (c) 2023 Phosphor Icons); full notice in THIRD_PARTY_NOTICES.md. -->
+<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+  <symbol id="icon-deadline" viewBox="0 0 256 256" fill="currentColor"><path d="M240,128a15.85,15.85,0,0,1-4.67,11.28l-96.05,96.06a16,16,0,0,1-22.56,0h0l-96-96.06a16,16,0,0,1,0-22.56l96.05-96.06a16,16,0,0,1,22.56,0l96.05,96.06A15.85,15.85,0,0,1,240,128Z"/></symbol>
+  <symbol id="icon-qualifying" viewBox="76 76 104 104" fill="currentColor"><path d="M128,96a32,32,0,1,0,32,32A32,32,0,0,0,128,96Zm0,48a16,16,0,1,1,16-16A16,16,0,0,1,128,144Z"/></symbol>
+  <symbol id="icon-final" viewBox="0 0 256 256" fill="currentColor"><path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,176H48V48H208V208Z"/></symbol>
+  <symbol id="icon-flag" viewBox="0 0 256 256" fill="currentColor"><path d="M227.32,48.75A8,8,0,0,0,218.76,50c-28,24.22-51.72,12.48-79.21-1.13C111.07,34.76,78.78,18.79,42.76,50A8,8,0,0,0,40,56V224a8,8,0,0,0,16,0V179.77c26.79-21.16,49.87-9.75,76.45,3.41,28.49,14.09,60.77,30.06,96.79-1.13a8,8,0,0,0,2.76-6V56A8,8,0,0,0,227.32,48.75ZM216,71.6v40.65c-14,11.06-27,13.22-40,10.88V79.34A60.05,60.05,0,0,0,216,71.6Zm-56,3.76v43c-6.66-2.67-13.43-6-20.45-9.48-8.82-4.37-18-8.91-27.55-12.18v-43c6.66,2.66,13.43,6,20.45,9.48C141.27,67.55,150.46,72.09,160,75.36ZM96,48.91V92.69a60.06,60.06,0,0,0-40,7.75V59.78C70,48.72,83,46.57,96,48.91ZM86.58,152A60.06,60.06,0,0,0,56,160.43V119.78c14-11.06,27-13.22,40-10.88v43.8A65.61,65.61,0,0,0,86.58,152ZM112,156.67v-43c6.66,2.66,13.43,6,20.45,9.48,8.82,4.37,18,8.9,27.55,12.17v43c-6.66-2.67-13.43-6-20.45-9.48C130.73,164.47,121.54,159.94,112,156.67Zm64,26.45v-43.8a65.61,65.61,0,0,0,9.42.72A60.11,60.11,0,0,0,216,131.57v40.68C202,183.31,189,185.46,176,183.12Z"/></symbol>
+  <symbol id="icon-calendar" viewBox="0 0 256 256" fill="currentColor"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-68-76a12,12,0,1,1-12-12A12,12,0,0,1,140,132Zm44,0a12,12,0,1,1-12-12A12,12,0,0,1,184,132ZM96,172a12,12,0,1,1-12-12A12,12,0,0,1,96,172Zm44,0a12,12,0,1,1-12-12A12,12,0,0,1,140,172Zm44,0a12,12,0,1,1-12-12A12,12,0,0,1,184,172Z"/></symbol>
+  <symbol id="icon-bookmark" viewBox="0 0 256 256" fill="currentColor"><path d="M184,32H72A16,16,0,0,0,56,48V224a8,8,0,0,0,12.24,6.78L128,193.43l59.77,37.35A8,8,0,0,0,200,224V48A16,16,0,0,0,184,32Zm0,177.57-51.77-32.35a8,8,0,0,0-8.48,0L72,209.57V48H184Z"/></symbol>
+  <symbol id="icon-saved" viewBox="0 0 256 256" fill="currentColor"><path d="M184,32H72A16,16,0,0,0,56,48V224a8,8,0,0,0,12.24,6.78L128,193.43l59.77,37.35A8,8,0,0,0,200,224V48A16,16,0,0,0,184,32Z"/></symbol>
+  <symbol id="icon-search" viewBox="0 0 256 256" fill="currentColor"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></symbol>
+  <symbol id="icon-left" viewBox="0 0 256 256" fill="currentColor"><path d="M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"/></symbol>
+  <symbol id="icon-right" viewBox="0 0 256 256" fill="currentColor"><path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"/></symbol>
+  <symbol id="icon-brand" viewBox="0 0 256 256" fill="currentColor"><path d="M232,120h-8.34A96.14,96.14,0,0,0,136,32.34V24a8,8,0,0,0-16,0v8.34A96.14,96.14,0,0,0,32.34,120H24a8,8,0,0,0,0,16h8.34A96.14,96.14,0,0,0,120,223.66V232a8,8,0,0,0,16,0v-8.34A96.14,96.14,0,0,0,223.66,136H232a8,8,0,0,0,0-16Zm-96,87.6V200a8,8,0,0,0-16,0v7.6A80.15,80.15,0,0,1,48.4,136H56a8,8,0,0,0,0-16H48.4A80.15,80.15,0,0,1,120,48.4V56a8,8,0,0,0,16,0V48.4A80.15,80.15,0,0,1,207.6,120H200a8,8,0,0,0,0,16h7.6A80.15,80.15,0,0,1,136,207.6ZM128,88a40,40,0,1,0,40,40A40,40,0,0,0,128,88Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,152Z"/></symbol>
+</svg>
+<main class="shell">
+  <header class="mast">
+    <a class="identity" href="/" aria-label="返回竞赛雷达首页"><svg class="icon" aria-hidden="true"><use href="#icon-brand"/></svg>竞赛雷达</a>
+    <h1>赛事线路图</h1>
+    <div class="mast-meta"><p class="mast-dates"><svg class="icon" aria-hidden="true"><use href="#icon-calendar"/></svg><span id="range-label">正在加载</span><span class="sr-only">北京时间</span></p><p class="mast-note">公开赛历 · 北京时间</p></div>
+    <div class="mast-actions"><button type="button" id="saved-toggle-top" class="saved-toggle" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-bookmark"/></svg>我的赛程<span class="saved-count" id="saved-count-top" hidden>0</span></button></div>
+  </header>
+  <div class="sheet">
+    <section class="main-board" aria-label="赛事线路">
+      <div class="filters">
+        <div class="filter-left">
+          <div class="regions" aria-label="赛事地区" role="group"><button data-region="cn" type="button" aria-pressed="true">国内</button><button data-region="intl" type="button" aria-pressed="false">国际</button></div>
+          <div class="categories" id="categories" role="group" aria-label="赛事类别"></div>
+        </div>
+        <div class="filter-tools" id="filter-tools">
+          <label class="search"><span class="sr-only">搜索赛事</span><svg class="icon" aria-hidden="true"><use href="#icon-search"/></svg><input id="search" type="search" placeholder="搜索赛事" autocomplete="off"></label>
+          <button type="button" id="saved-toggle" class="saved-toggle" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-bookmark"/></svg>我的赛程<span class="saved-count" id="saved-count" hidden>0</span></button>
+        </div>
+      </div>
+      <div class="legend"><strong id="result-count" aria-live="polite">正在加载…</strong><div class="legend-items" aria-label="阶段图例"><span><svg class="icon" aria-hidden="true"><use href="#icon-deadline"/></svg>报名截止</span><span><svg class="icon" aria-hidden="true"><use href="#icon-qualifying"/></svg>初赛/比赛</span><span><svg class="icon" aria-hidden="true"><use href="#icon-final"/></svg>决赛</span><span><i class="dash" aria-hidden="true"></i>预计/暂定</span></div></div>
+      <div class="map" id="map" aria-label="按日期排列的赛事阶段" role="group" style="--days:21">
+        <span class="map-namehead">赛事 / 日期</span><div class="date-axis" id="date-axis"></div><div class="cursor-track" aria-hidden="true"><div class="date-cursor" id="date-cursor"></div></div><div class="tracks" id="tracks"><div class="timeline-loading">正在加载赛事…</div></div>
+      </div>
+      <div id="mobile-list" class="mobile-list" aria-label="赛事列表"></div>
+      <p class="map-caption"><span id="map-caption-text">日历轴上的数字表示同一天有多个赛程节点。</span><button type="button" id="load-more" hidden>显示更多</button></p>
+    </section>
+    <aside class="day-sheet" aria-labelledby="day-label">
+      <div class="day-top"><h2 id="day-label">当天日程</h2><div class="day-nav" role="group" aria-label="逐日浏览"><button type="button" id="previous" aria-label="前一天"><svg class="icon" aria-hidden="true"><use href="#icon-left"/></svg></button><button type="button" id="next" aria-label="后一天"><svg class="icon" aria-hidden="true"><use href="#icon-right"/></svg></button></div></div>
+      <div id="day-content"><div class="day-heading" id="day-heading" aria-live="polite"></div><ul class="day-items" id="day-items"></ul><p class="day-empty" id="day-empty" hidden>当天没有符合当前筛选的赛程。</p><section class="detail" id="detail" aria-label="赛事阶段" hidden><div class="detail-head"><h3 id="detail-title"></h3><button id="bookmark" type="button" class="bookmark" aria-pressed="false" aria-label="收藏赛事"></button></div><ol class="steps" id="steps"></ol><p class="detail-note" id="detail-note"></p><p class="detail-links" id="detail-links"></p></section></div>
+    </aside>
+  </div>
+  <footer class="map-caption" style="margin-top:14px"><span>数据来自各公开来源，日期以主办方官网为准。</span><span><a href="/" style="color:var(--green)">返回卡片列表</a> · <a href="/changes" style="color:var(--green)">公开变更</a> · <a href="/api/v1/ical/all.ics" style="color:var(--green)">ICS 订阅</a></span></footer>
+</main>
+<script src="/timeline.js?v=20261123b" defer></script>
+</body>
+</html>

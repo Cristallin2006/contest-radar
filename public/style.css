@@ -524,3 +524,7 @@ button { cursor: pointer; }
   .profile-grid, .dir-grid { grid-template-columns: 1fr; }
   .profile-actions { justify-content: flex-start; }
 }
+
+@media (max-width: 720px) {
+  .timeline-link { display: none; }
+}
