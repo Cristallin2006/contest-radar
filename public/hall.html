@@ -7,7 +7,7 @@
 <meta name="description" content="竞赛馆：收录竞赛雷达全部赛事系列与届次，附简介、类别、地区、报名截止与官网链接。">
 <title>竞赛馆 · 竞赛雷达</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/hall.css?v=20261123b">
+<link rel="stylesheet" href="/hall.css?v=20261123c">
 </head>
 <body>
 <header class="hall-top">
@@ -46,11 +46,19 @@
     <div class="hall-empty"><strong>正在加载竞赛馆…</strong></div>
   </div>
 
+  <dialog id="hallDetail" class="hall-dialog" aria-labelledby="hallDetailTitle">
+    <div class="hall-dialog-bar">
+      <span>赛事详情</span>
+      <button id="hallDetailClose" type="button" class="hall-dialog-close">关闭</button>
+    </div>
+    <div id="hallDetailBody" class="hall-detail-body"></div>
+  </dialog>
+
   <footer class="hall-footer">
     <span>数据来自各公开来源；简介为结构化摘要，日期与报名要求以主办方官网为准。</span>
     <span><a href="/">线路图</a> · <a href="/list">卡片列表</a> · <a href="/changes">变更</a> · <a href="/admin">管理</a></span>
   </footer>
 </main>
-<script src="/hall.js?v=20261123b" defer></script>
+<script src="/hall.js?v=20261123c" defer></script>
 </body>
 </html>

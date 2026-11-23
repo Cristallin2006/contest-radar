@@ -7,6 +7,7 @@
     mathmodel: "数模", academic: "学科竞赛", other: "其他",
   };
   const REGION_LABELS = { cn: "国内", intl: "国际" };
+  const MODE_LABELS = { online: "线上", offline: "线下", hybrid: "线上 + 线下", unknown: "待定" };
   const FIELD_ORDER = ["cyber", "software", "data", "math", "electronics", "engineering", "science", "design", "business", "language", "humanities", "sports", "other"];
   const FIELD_LABELS = {
     cyber: "网络安全", software: "计算机 / 软件", data: "数据 / 统计", math: "数学 / 建模",
@@ -31,8 +32,9 @@
       return /^https?:$/.test(url.protocol) ? url.href : "";
     } catch { return ""; }
   };
-  const state = { region: "all", category: "all", field: "all", tech: false, q: "" };
+  const state = { region: "all", category: "all", field: "all", tech: false, q: "", openId: null };
   let items = [];
+  let detailRequest = 0;
 
   function fmt(value) {
     if (!value) return "待定";
@@ -134,7 +136,7 @@
         <span class="hall-badge status ${esc(status)}">${esc(STATUS_LABELS[status] || status)}</span>
         ${item.date_confidence === "estimated" ? '<span class="hall-badge">预计</span>' : ""}
       </div>
-      <h3><a href="/list?open=${encodeURIComponent(item.id)}">${esc(item.title)}</a></h3>
+      <h3><a href="/hall?open=${encodeURIComponent(item.id)}" data-detail="${esc(item.id)}">${esc(item.title)}</a></h3>
       <p class="hall-series">${esc(item.series_name || "一次性赛事")}${item.organizer ? ` · ${esc(item.organizer)}` : ""}</p>
       <p class="hall-desc">${esc(item.description || "暂无简介，点击详情查看来源与官网。")}</p>
       <div class="hall-meta">
@@ -144,7 +146,7 @@
       ${tags.length ? `<div class="hall-tags">${tags.map((tag) => `<span class="hall-tag">${esc(tag)}</span>`).join("")}</div>` : ""}
       <div class="hall-foot">
         <span>${esc(sourceOf(item))}${item.verified_at ? ` · 核实 ${esc(String(item.verified_at).slice(0, 10))}` : ""}</span>
-        <span><a href="/list?open=${encodeURIComponent(item.id)}">详情</a>${official ? ` · <a href="${esc(official)}" target="_blank" rel="noreferrer">官网</a>` : ""}</span>
+        <span><a href="/hall?open=${encodeURIComponent(item.id)}" data-detail="${esc(item.id)}">详情</a>${official ? ` · <a href="${esc(official)}" target="_blank" rel="noreferrer">官网</a>` : ""}</span>
       </div>
     </article>`;
   }
@@ -191,6 +193,102 @@
     }).join("");
   }
 
+  function stageKindLabel(stage) {
+    return stage.kind_label || ({
+      registration: "报名", submission: "提交", qualifier: "初赛",
+      final: "决赛", other: "阶段",
+    }[stage.kind] || "阶段");
+  }
+
+  function stageTimeText(stage) {
+    if (stage.deadline_at) return `截止 ${fmt(stage.deadline_at)}`;
+    if (stage.starts_at && stage.ends_at) return `${fmt(stage.starts_at)} — ${fmt(stage.ends_at)}`;
+    if (stage.starts_at) return fmt(stage.starts_at);
+    return "时间待定";
+  }
+
+  function fact(label, value, strong = false) {
+    return `<div class="hall-detail-fact"><b>${esc(label)}</b>${strong ? `<strong>${esc(value)}</strong>` : esc(value)}</div>`;
+  }
+
+  function renderDetail(d) {
+    const deadline = d.next_deadline || d.registration_deadline;
+    const start = d.next_start || d.event_start;
+    const status = d.status || "unknown";
+    const official = safeUrl(d.signup_url || d.url);
+    const source = safeUrl(d.source_url);
+    const directions = d.tags?.direction || [];
+    const formats = d.tags?.format || [];
+    const team = d.team_size_min && d.team_size_max ? `${d.team_size_min}–${d.team_size_max} 人`
+      : d.team_size_max ? `最多 ${d.team_size_max} 人` : "待定";
+    const facts = [
+      fact("报名截止", `${fmt(deadline)}${dayText(deadline) ? ` · ${dayText(deadline)}` : ""}`, true),
+      fact("开赛", fmt(start)),
+      fact("结束", fmt(d.event_end)),
+      fact("状态", STATUS_LABELS[status] || status),
+      fact("模式", MODE_LABELS[d.mode] || d.mode_label || d.mode || "待定"),
+      fact("队伍", team),
+      fact("费用", d.fee || "待定"),
+      fact("资格", d.eligibility || "待定"),
+    ].join("");
+    const stages = (d.stages || []).length
+      ? `<div class="hall-detail-stages">${d.stages.map((stage) => `
+          <div class="hall-stage-row">
+            <span class="hall-stage-kind">${esc(stageKindLabel(stage))}</span>
+            <div><b>${esc(stage.name || stageKindLabel(stage))}</b><small>${esc(stageTimeText(stage))}${stage.location ? ` · ${esc(stage.location)}` : ""}${stage.note ? ` · ${esc(stage.note)}` : ""}</small></div>
+          </div>`).join("")}</div>`
+      : '<p class="hall-detail-sub">暂无阶段信息，日期以主办方官网为准。</p>';
+    const tagHtml = [...directions, ...formats].length
+      ? `<div class="hall-detail-tags">${[...directions, ...formats].map((tag) => `<span class="hall-tag">${esc(tag)}</span>`).join("")}</div>`
+      : '<p class="hall-detail-sub">暂无技能标签。</p>';
+    $("hallDetailBody").innerHTML = `
+      <div class="hall-detail-kicker">
+        <span class="hall-badge cat">${esc(d.category_label || CATEGORY_LABELS[d.category] || d.category || "其他")}</span>
+        <span class="hall-badge field">${esc(d.field_label || FIELD_LABELS[d.field] || "其他")}</span>
+        <span class="hall-badge">${esc(d.region_label || REGION_LABELS[regionOf(d)])}</span>
+        <span class="hall-badge status ${esc(status)}">${esc(STATUS_LABELS[status] || status)}</span>
+        ${d.date_confidence === "estimated" ? '<span class="hall-badge">日期预计</span>' : ""}
+      </div>
+      <h2 id="hallDetailTitle" class="hall-detail-title">${esc(d.title)}</h2>
+      <p class="hall-detail-sub">${esc(d.series_name || "一次性赛事")}${d.organizer ? ` · ${esc(d.organizer)}` : ""}</p>
+      <p class="hall-detail-desc">${esc(d.description || "暂无简介。")}</p>
+      <section class="hall-detail-section"><h3>关键信息</h3><div class="hall-detail-grid">${facts}</div></section>
+      <section class="hall-detail-section"><h3>赛程阶段</h3>${stages}</section>
+      <section class="hall-detail-section"><h3>方向与赛制</h3>${tagHtml}</section>
+      <div class="hall-detail-actions">
+        ${official ? `<a href="${esc(official)}" target="_blank" rel="noreferrer">前往官网</a>` : ""}
+        ${source ? `<a class="secondary" href="${esc(source)}" target="_blank" rel="noreferrer">查看来源</a>` : ""}
+        <a class="secondary" href="/hall?open=${encodeURIComponent(d.id)}">本页链接</a>
+      </div>
+      <p class="hall-detail-sub" style="margin-top:14px">来源：${esc(d.source_name || d.source || "未知")}${d.verified_at ? ` · 核实 ${esc(String(d.verified_at).slice(0, 10))}` : ""}</p>
+    `;
+  }
+
+  async function openDetail(id) {
+    const dialog = $("hallDetail");
+    state.openId = String(id);
+    syncUrl();
+    if (!dialog.open) dialog.showModal();
+    document.body.classList.add("detail-open");
+    const request = ++detailRequest;
+    $("hallDetailBody").innerHTML = '<div class="hall-detail-loading">正在读取赛事详情…</div>';
+    try {
+      const response = await fetch(`/api/v1/editions/${encodeURIComponent(id)}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      if (request !== detailRequest) return;
+      renderDetail(data);
+    } catch (error) {
+      if (request !== detailRequest) return;
+      $("hallDetailBody").innerHTML = `<div class="hall-detail-loading">详情加载失败：${esc(error.message || error)}</div>`;
+    }
+  }
+
+  function closeDetail() {
+    const dialog = $("hallDetail");
+    if (dialog.open) dialog.close();
+  }
+
   function syncUrl() {
     const params = new URLSearchParams();
     if (state.region !== "all") params.set("region", state.region);
@@ -198,6 +296,7 @@
     if (state.field !== "all") params.set("field", state.field);
     if (state.tech) params.set("tech", "1");
     if (state.q) params.set("q", state.q);
+    if (state.openId) params.set("open", state.openId);
     const query = params.toString();
     history.replaceState(null, "", location.pathname + (query ? `?${query}` : ""));
   }
@@ -237,6 +336,22 @@
       syncUrl();
       render();
     });
+    $("hallList").addEventListener("click", (event) => {
+      const link = event.target.closest("[data-detail]");
+      if (!link) return;
+      event.preventDefault();
+      openDetail(link.dataset.detail);
+    });
+    $("hallDetailClose").addEventListener("click", closeDetail);
+    $("hallDetail").addEventListener("click", (event) => {
+      if (event.target === $("hallDetail")) closeDetail();
+    });
+    $("hallDetail").addEventListener("close", () => {
+      detailRequest += 1;
+      document.body.classList.remove("detail-open");
+      state.openId = null;
+      syncUrl();
+    });
     $("hallReset").addEventListener("click", () => {
       state.region = "all";
       state.category = "all";
@@ -270,10 +385,12 @@
     if (params.get("field") && FIELD_LABELS[params.get("field")]) state.field = params.get("field");
     state.tech = params.get("tech") === "1";
     state.q = params.get("q") || "";
+    state.openId = params.get("open") || null;
     bind();
     try {
       items = await fetchAllEditions();
       render();
+      if (state.openId) openDetail(state.openId);
     } catch (error) {
       $("hallList").innerHTML = `<div class="hall-empty"><strong>竞赛馆加载失败</strong>${esc(error.message || error)}</div>`;
       $("hallCount").textContent = "加载失败";
