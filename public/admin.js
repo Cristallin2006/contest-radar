@@ -18,6 +18,7 @@
     tab: "overview",
     pending: [],
     submissions: [],
+    comments: [],
     editions: [],
     series: [],
     tags: [],
@@ -101,6 +102,7 @@
     if (tab === "overview") loadOverview().catch((e) => setMessage(e.message, true));
     if (tab === "pending") loadPending().catch((e) => setMessage(e.message, true));
     if (tab === "submissions") loadSubmissions().catch((e) => setMessage(e.message, true));
+    if (tab === "comments") loadComments().catch((e) => setMessage(e.message, true));
     if (tab === "editions") loadEditions().catch((e) => setMessage(e.message, true));
     if (tab === "taxonomy") loadTaxonomy().catch((e) => setMessage(e.message, true));
     if (tab === "sources") loadSources().catch((e) => setMessage(e.message, true));
@@ -352,6 +354,24 @@
       </dl>
       <div class="pending-actions">
         ${item.status === "pending" ? `<button class="primary-btn" data-sub-action="accept" data-id="${item.id}" type="button">采用并建草稿</button><button class="danger-btn" data-sub-action="reject" data-id="${item.id}" type="button">拒绝</button>` : ""}
+      </div>
+    </article>`).join("");
+  }
+
+  async function loadComments() {
+    const status = $("#commentState")?.value || "visible";
+    const data = await api(`/comments?state=${encodeURIComponent(status)}&limit=200`);
+    state.comments = data.items || [];
+    const list = $("#commentAdminList");
+    if (!state.comments.length) {
+      list.innerHTML = '<p class="muted">没有这个状态的留言。</p>';
+      return;
+    }
+    list.innerHTML = state.comments.map((item) => `<article class="pending-card" data-id="${item.id}">
+      <header><div><h3>@${esc(item.login)}</h3><div class="meta">${pills([item.status, formatDate(item.created_at)])}</div></div><span class="pill">#${item.id}</span></header>
+      <dl><dt>内容</dt><dd style="white-space:pre-wrap">${esc(item.body)}</dd>${item.edition_id ? `<dt>赛事</dt><dd>#${item.edition_id}</dd>` : ""}</dl>
+      <div class="pending-actions">
+        ${item.status === "visible" ? `<button class="danger-btn" data-comment-action="hide" data-id="${item.id}" type="button">隐藏</button>` : `<button class="secondary-btn" data-comment-action="show" data-id="${item.id}" type="button">恢复显示</button>`}
       </div>
     </article>`).join("");
   }
@@ -652,6 +672,16 @@
       }
     });
     $("#logoutBtn").addEventListener("click", logout);
+    $("#commentReload")?.addEventListener("click", () => loadComments().catch((e) => setMessage(e.message, true)));
+    $("#commentState")?.addEventListener("change", () => loadComments().catch((e) => setMessage(e.message, true)));
+    $("#commentAdminList")?.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-comment-action]");
+      if (!button) return;
+      try {
+        await api(`/comments/${button.dataset.id}/${button.dataset.commentAction}`, { method: "POST" });
+        await loadComments();
+      } catch (err) { alert(err.message); }
+    });
     $("#submissionReload")?.addEventListener("click", () => loadSubmissions().catch((e) => setMessage(e.message, true)));
     $("#submissionState")?.addEventListener("change", () => loadSubmissions().catch((e) => setMessage(e.message, true)));
     $("#submissionList")?.addEventListener("click", async (event) => {

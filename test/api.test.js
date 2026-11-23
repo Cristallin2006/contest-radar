@@ -76,7 +76,7 @@ test("public health exposes schema version", async () => {
   const { res, data } = await json("/api/v1/health");
   assert.equal(res.status, 200);
   assert.equal(data.ok, true);
-  assert.equal(data.schema_version, 4);
+  assert.equal(data.schema_version, 5);
 });
 
 let editionId;
@@ -142,6 +142,21 @@ test("auth status and submission endpoints are safe by default", async () => {
   assert.match(await page.text(), /投稿/);
 });
 
+test("comment board is public but posting requires login", async () => {
+  const list = await json("/api/v1/comments");
+  assert.equal(list.res.status, 200);
+  assert.deepEqual(list.data.items, []);
+  const post = await fetch(`${BASE}/api/v1/comments`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ body: "测试留言" }),
+  });
+  assert.equal(post.status, 401);
+  const board = await fetch(`${BASE}/board`);
+  assert.equal(board.status, 200);
+  assert.match(await board.text(), /留言板/);
+});
+
 test("non-competition content is hidden from public queries", async () => {
   const { data } = await json("/api/v1/admin/editions", {
     method: "POST",
@@ -195,7 +210,7 @@ test("admin overview reports the created edition", async () => {
   assert.equal(res.status, 200);
   assert.equal(data.editions.published, 1);
   assert.equal(data.stages, 2);
-  assert.equal(data.schema_version, 4);
+  assert.equal(data.schema_version, 5);
 });
 
 test("admin can manage series and tags", async () => {

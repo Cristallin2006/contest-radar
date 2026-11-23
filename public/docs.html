@@ -16,6 +16,7 @@
     <a href="/hall">竞赛馆</a>
     <a href="/">赛事线路图</a>
     <a href="/list">卡片列表</a>
+    <a href="/board">留言板</a>
     <a class="active" href="/docs.html" aria-current="page">文档 / API</a>
     <a href="/changes">公开变更</a>
   </nav>
@@ -39,6 +40,7 @@
       <a href="#api">API v1</a>
       <a href="#params">查询参数</a>
       <a href="#examples">请求示例</a>
+      <a href="#comments">留言板</a>
       <a href="#ics">ICS 日历</a>
       <a href="#errors">错误与限制</a>
       <a href="#corrections">纠错</a>
@@ -77,6 +79,8 @@
               <tr><td>GET</td><td><code>/taxonomy</code></td><td>类别、方向、内容类型、阶段等字典</td></tr>
               <tr><td>GET</td><td><code>/stats</code></td><td>公开赛事统计</td></tr>
               <tr><td>GET</td><td><code>/changes</code></td><td>公开变更记录</td></tr>
+              <tr><td>GET</td><td><code>/comments</code></td><td>公开留言板；<code>?edition_id=</code> 查看赛事评论</td></tr>
+              <tr><td>POST</td><td><code>/comments</code></td><td>登录后发言（需要 GitHub 登录）</td></tr>
               <tr><td>GET</td><td><code>/health</code></td><td>健康检查与 schema 版本</td></tr>
               <tr><td>GET</td><td><code>/ical/all.ics</code></td><td>全部公开赛事的 ICS</td></tr>
               <tr><td>GET</td><td><code>/ical/region/:region.ics</code></td><td><code>cn</code> / <code>intl</code></td></tr>
@@ -120,6 +124,11 @@ curl 'https://contest.07212006.xyz/api/v1/editions?tech=1&amp;all_dates=1&amp;si
 # 单个赛事
 curl 'https://contest.07212006.xyz/api/v1/editions/232'</code></pre>
         <p>列表响应包含 <code>items</code>、<code>page</code>、<code>size</code>、<code>total</code>、<code>pages</code> 和 <code>stats</code>。分页时逐页请求。</p>
+      </section>
+
+      <section id="comments">
+        <h2>留言板</h2>
+        <p>公开留言板位于 <a href="/board">/board</a>。阅读公开；发言需要 GitHub 登录。正文限制 1000 字，每 10 分钟最多 3 条、每天最多 20 条；管理员可以隐藏留言。</p>
       </section>
 
       <section id="ics">

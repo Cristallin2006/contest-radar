@@ -29,6 +29,7 @@ import {
 } from "./ingest.js";
 import { getMeta } from "./schema.js";
 import { acceptSubmission, getSubmission, listSubmissionsForAdmin, rejectSubmission } from "./submissions.js";
+import { adminListComments, setCommentStatus } from "./comments.js";
 import {
   checkOrigin,
   clientIp,
@@ -57,6 +58,7 @@ function overview() {
       total: db.prepare("SELECT COUNT(*) AS n FROM competition_submissions").get()?.n ?? 0,
     },
     users: db.prepare("SELECT COUNT(*) AS n FROM users").get()?.n ?? 0,
+    comments: db.prepare("SELECT COUNT(*) AS n FROM comments WHERE status = 'visible'").get()?.n ?? 0,
     sources: db.prepare("SELECT * FROM sources ORDER BY id").all(),
     schema_version: Number(getMeta("schema_version", "0")),
   };
@@ -121,6 +123,20 @@ export async function handleAdminApi(req, res, url, ctx = {}) {
       });
       return true;
     }
+    if (pathname === "/api/v1/admin/comments" && method === "GET") {
+      json(res, 200, {
+        items: adminListComments(url.searchParams.get("state") || "visible", url.searchParams.get("limit") || 100),
+      });
+      return true;
+    }
+    const commentAction = pathname.match(/^\/api\/v1\/admin\/comments\/(\d+)\/(hide|show)$/);
+    if (commentAction && method === "POST") {
+      const item = setCommentStatus(Number(commentAction[1]), commentAction[2] === "hide" ? "hidden" : "visible", actor);
+      recordAudit(actor, commentAction[2] === "hide" ? "hide-comment" : "show-comment", `comments:${commentAction[1]}`, null, ip);
+      json(res, 200, item);
+      return true;
+    }
+
     if (pathname === "/api/v1/admin/submissions" && method === "GET") {
       json(res, 200, {
         items: listSubmissionsForAdmin(url.searchParams.get("state") || "pending", url.searchParams.get("limit") || 100),

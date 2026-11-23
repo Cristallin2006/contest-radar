@@ -212,6 +212,7 @@ function sitemap(req) {
     `<url><loc>${xmlEscape(base)}/timeline</loc><changefreq>daily</changefreq><priority>0.7</priority></url>`,
     `<url><loc>${xmlEscape(base)}/hall</loc><changefreq>daily</changefreq><priority>0.8</priority></url>`,
     `<url><loc>${xmlEscape(base)}/list</loc><changefreq>daily</changefreq><priority>0.5</priority></url>`,
+    `<url><loc>${xmlEscape(base)}/board</loc><changefreq>daily</changefreq><priority>0.4</priority></url>`,
   ];
   for (const item of allPublishedForCalendar()) {
     rows.push(`<url><loc>${xmlEscape(base)}/?open=${item.id}</loc><lastmod>${xmlEscape(String(item.updated_at || "").slice(0, 10))}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
@@ -295,6 +296,7 @@ function serveStatic(req, res, pathname) {
   if (rel === "/changes") rel = "/changes.html";
   if (rel === "/hall") rel = "/hall.html";
   if (rel === "/submit") rel = "/submit.html";
+  if (rel === "/board") rel = "/board.html";
   const file = path.normalize(path.join(PUBLIC_DIR, rel));
   if (!file.startsWith(PUBLIC_DIR)) { res.writeHead(403); res.end("forbidden"); return; }
   fs.readFile(file, (err, buf) => {

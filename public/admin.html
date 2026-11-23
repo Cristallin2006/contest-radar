@@ -41,6 +41,7 @@
       <button class="admin-tab active" data-tab="overview" type="button">概览</button>
       <button class="admin-tab" data-tab="pending" type="button">待审核 <span id="pendingBadge" class="badge hidden">0</span></button>
       <button class="admin-tab" data-tab="submissions" type="button">用户投稿 <span id="submissionBadge" class="badge hidden">0</span></button>
+      <button class="admin-tab" data-tab="comments" type="button">留言板</button>
       <button class="admin-tab" data-tab="editions" type="button">赛事</button>
       <button class="admin-tab" data-tab="taxonomy" type="button">系列 / 标签</button>
       <button class="admin-tab" data-tab="sources" type="button">数据源</button>
@@ -97,6 +98,21 @@
       </div>
       <p class="muted">采用后会创建一个草稿赛事；管理员补充日期、阶段和来源后再发布。</p>
       <div id="submissionList" class="pending-list"></div>
+    </section>
+
+    <section id="panel-comments" class="admin-panel hidden">
+      <div class="panel-heading">
+        <div><p class="eyebrow">COMMENTS</p><h2>留言板</h2></div>
+        <div class="heading-actions">
+          <select id="commentState" class="small-input" aria-label="留言状态">
+            <option value="visible">显示中</option>
+            <option value="hidden">已隐藏</option>
+          </select>
+          <button id="commentReload" class="secondary-btn" type="button">刷新</button>
+        </div>
+      </div>
+      <p class="muted">留言默认公开；隐藏后不会出现在公开留言板。</p>
+      <div id="commentAdminList" class="pending-list"></div>
     </section>
 
     <section id="panel-editions" class="admin-panel hidden">

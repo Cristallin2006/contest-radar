@@ -2,7 +2,7 @@ import { db } from "./db.js";
 import { ctfDisplayName } from "./collectors/ctf.js";
 import { classifyEdition } from "./classify.js";
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 const NOW = () => new Date().toISOString();
 
@@ -235,6 +235,20 @@ CREATE TABLE IF NOT EXISTS competition_submissions (
 );
 CREATE INDEX IF NOT EXISTS idx_submissions_status ON competition_submissions(status, created_at);
 CREATE INDEX IF NOT EXISTS idx_submissions_user ON competition_submissions(user_id, created_at);
+
+CREATE TABLE IF NOT EXISTS comments (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  edition_id  INTEGER REFERENCES event_editions(id) ON DELETE CASCADE,
+  body        TEXT NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'visible',
+  created_at  TEXT NOT NULL,
+  updated_at  TEXT NOT NULL,
+  ip_hash     TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_comments_edition ON comments(edition_id, status, created_at);
+CREATE INDEX IF NOT EXISTS idx_comments_board ON comments(status, created_at) WHERE edition_id IS NULL;
+CREATE INDEX IF NOT EXISTS idx_comments_user ON comments(user_id, created_at);
 
 CREATE TABLE IF NOT EXISTS settings (
   key        TEXT PRIMARY KEY,

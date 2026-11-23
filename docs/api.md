@@ -129,7 +129,7 @@ GET /api/v1/health
 ```json
 {
   "ok": true,
-  "schema_version": 4,
+  "schema_version": 5,
   "editions": 230,
   "pending_ingest": 0,
   "last_refresh": "2026-11-23T11:18:00.228Z",
@@ -140,7 +140,33 @@ GET /api/v1/health
 
 `editions` 是公开可见数量，不包含归档、活动、志愿者等非公开内容。
 
-## 7. ICS
+## 7. 留言板
+
+```http
+GET /api/v1/comments
+GET /api/v1/comments?edition_id=232
+```
+
+- 不带 `edition_id`：公开留言板。
+- 带 `edition_id`：该赛事的评论（当前网页主要使用公开留言板）。
+- 只返回 `status=visible` 的留言。
+- 返回作者公开 GitHub 昵称/头像、正文和时间。
+
+登录用户发言：
+
+```http
+POST /api/v1/comments
+Content-Type: application/json
+
+{"body":"留言内容", "edition_id": null}
+```
+
+- 需要 GitHub 登录 Cookie。
+- 正文 1–1000 字。
+- 每 10 分钟最多 3 条，每天最多 20 条。
+- 管理员可以隐藏留言；隐藏后公开接口不再返回。
+
+## 8. ICS
 
 ```text
 GET /api/v1/ical/all.ics
@@ -154,13 +180,13 @@ GET /api/v1/ical/category/mathmodel.ics
 - 预计/待定日期不会生成精确提醒。
 - 默认时区：Asia/Shanghai。
 
-## 8. 缓存与 ETag
+## 9. 缓存与 ETag
 
 公开 JSON 默认 `cache-control: public, max-age=60`；分类字典为 1 小时；ICS 为 15 分钟。
 
 支持 `If-None-Match`，可能返回 `304 Not Modified`。
 
-## 9. 错误格式
+## 10. 错误格式
 
 ```json
 { "code": "EDITION_NOT_FOUND", "message": "赛事不存在或未发布" }
@@ -174,13 +200,13 @@ GET /api/v1/ical/category/mathmodel.ics
 - `405` 方法不允许
 - `429` 频率限制
 
-## 10. 使用限制
+## 11. 使用限制
 
 - 请勿高频轮询；优先使用 ETag 和 `cache-control`。
 - 请勿把公开 API 当作官方报名数据源。
 - 站点不保证接口永久兼容；变更会尽量记录在公开变更页。
 
-## 11. 纠错
+## 12. 纠错
 
 请通过项目仓库提交 Issue：
 

@@ -11,6 +11,7 @@ import { getMeta } from "./schema.js";
 import { clientIp, error, etagOf, ifNoneMatch, json, readJson, sendText } from "./http.js";
 import { currentUser } from "./auth.js";
 import { createSubmission, listMySubmissions } from "./submissions.js";
+import { createComment, listComments } from "./comments.js";
 
 function filtersFrom(url) {
   const q = url.searchParams;
@@ -96,6 +97,36 @@ export async function handlePublicApi(req, res, url, ctx = {}) {
       return true;
     }
     json(res, 200, { items: listMySubmissions(user) });
+    return true;
+  }
+
+  if (pathname === "/api/v1/comments" && (req.method === "GET" || req.method === "HEAD")) {
+    const raw = url.searchParams.get("edition_id");
+    if (raw !== null && raw !== "" && !Number.isInteger(Number(raw))) {
+      error(res, "BAD_REQUEST", 400, "edition_id 无效");
+      return true;
+    }
+    json(res, 200, {
+      items: listComments({
+        editionId: raw === null || raw === "" ? null : Number(raw),
+        limit: url.searchParams.get("limit") || 100,
+      }),
+    });
+    return true;
+  }
+
+  if (pathname === "/api/v1/comments" && req.method === "POST") {
+    const user = currentUser(req);
+    if (!user) {
+      error(res, "LOGIN_REQUIRED", 401, "请先使用 GitHub 登录");
+      return true;
+    }
+    try {
+      const item = createComment(user, await readJson(req), clientIp(req));
+      json(res, 201, { ok: true, item });
+    } catch (err) {
+      error(res, "COMMENT_INVALID", err.status || 400, String(err.message || err));
+    }
     return true;
   }
 

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="description" content="竞赛雷达留言板：登录后讨论竞赛、赛制、报名和备赛经验。">
+<title>留言板 · 竞赛雷达</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/submit.css?v=20261123a">
+<link rel="stylesheet" href="/board.css?v=20261123a">
+</head>
+<body>
+<header class="submit-top">
+  <a class="submit-brand" href="/"><span class="mark" aria-hidden="true"></span>竞赛雷达</a>
+  <nav class="submit-nav" aria-label="站点导航">
+    <a href="/hall">竞赛馆</a>
+    <a href="/">赛事线路图</a>
+    <a href="/list">卡片列表</a>
+    <a href="/submit">投稿</a>
+    <a class="active" href="/board" aria-current="page">留言板</a>
+    <a href="/docs.html">文档 / API</a>
+  </nav>
+</header>
+<main class="submit-shell">
+  <section class="submit-hero">
+    <p class="eyebrow">BOARD / LOGIN TO POST</p>
+    <h1>留言板</h1>
+    <p class="lede">讨论竞赛、赛制、报名和备赛经验。阅读公开，发言需要 GitHub 登录；请勿发布隐私信息和未经核实的报名承诺。</p>
+  </section>
+
+  <div id="authBox" class="submit-auth" aria-live="polite"></div>
+
+  <section id="composerSection" class="board-composer" hidden>
+    <label for="commentBody">写点什么</label>
+    <textarea id="commentBody" maxlength="1000" rows="3" placeholder="例如：数维杯秋季赛的论文提交时间是不是北京时间 11 月 24 日 10:00？"></textarea>
+    <div class="board-composer-foot">
+      <span id="commentMessage" class="submit-message" role="status"></span>
+      <button id="commentSubmit" type="button" class="submit-primary">发布留言</button>
+    </div>
+  </section>
+
+  <section class="board-section">
+    <div class="submit-section-head">
+      <h2>最新留言</h2>
+      <span id="commentCount">正在加载…</span>
+    </div>
+    <div id="commentList" class="board-list"></div>
+  </section>
+
+  <footer class="submit-footer">
+    <span>留言仅代表发布者个人观点；时间、地区、报名信息请以主办方官网为准。</span>
+    <span class="site-days" data-site-days>本站已运行 — 天</span>
+    <span><a href="/hall">竞赛馆</a> · <a href="/docs.html">文档 / API</a> · <a href="/">线路图</a></span>
+  </footer>
+</main>
+<script src="/site-days.js?v=20261123a" defer></script>
+<script src="/board.js?v=20261123a" defer></script>
+</body>
+</html>
