@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="color-scheme" content="only light" />
+  <title>竞赛雷达 · 管理后台</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/style.css?v=20261123e" />
+  <link rel="stylesheet" href="/admin.css?v=20261123e" />
+</head>
+<body class="admin-body">
+  <header class="admin-top">
+    <a class="admin-brand" href="/">
+      <span class="admin-mark"></span>
+      <span><strong>竞赛雷达</strong><small>ADMIN · v0.2-anon</small></span>
+    </a>
+    <div class="admin-top-actions">
+      <a class="ghost-btn" href="/" target="_blank" rel="noreferrer">打开公开站</a>
+      <button id="logoutBtn" class="ghost-btn hidden" type="button">退出令牌</button>
+    </div>
+  </header>
+
+  <main id="loginView" class="login-wrap">
+    <section class="login-card">
+      <p class="eyebrow">ADMIN TOKEN</p>
+      <h1>管理员入口</h1>
+      <p class="muted">没有账号体系。输入环境变量里的 <code>ADMIN_TOKEN</code>，令牌只保存在本标签页的 sessionStorage。</p>
+      <form id="loginForm" class="login-form">
+        <label for="tokenInput">管理员令牌</label>
+        <input id="tokenInput" name="token" type="password" autocomplete="current-password" placeholder="至少 32 字节随机令牌" required />
+        <button class="primary-btn" type="submit">进入后台</button>
+        <p id="loginError" class="form-error" role="alert"></p>
+      </form>
+    </section>
+  </main>
+
+  <main id="adminView" class="admin-shell hidden">
+    <nav class="admin-tabs" aria-label="管理模块">
+      <button class="admin-tab active" data-tab="overview" type="button">概览</button>
+      <button class="admin-tab" data-tab="pending" type="button">待审核 <span id="pendingBadge" class="badge hidden">0</span></button>
+      <button class="admin-tab" data-tab="editions" type="button">赛事</button>
+      <button class="admin-tab" data-tab="taxonomy" type="button">系列 / 标签</button>
+      <button class="admin-tab" data-tab="sources" type="button">数据源</button>
+      <button class="admin-tab" data-tab="audit" type="button">审计与变更</button>
+    </nav>
+
+    <section id="panel-overview" class="admin-panel">
+      <div class="panel-heading">
+        <div><p class="eyebrow">OVERVIEW</p><h2>运行状态</h2></div>
+        <div class="heading-actions">
+          <button id="refreshBtn" class="secondary-btn" type="button">手动采集</button>
+          <button id="backupBtn" class="secondary-btn" type="button">立即备份</button>
+        </div>
+      </div>
+      <div id="overviewCards" class="metric-grid"></div>
+      <div class="split-grid">
+        <section class="admin-card">
+          <div class="card-head"><h3>数据源</h3><span class="mini">SOURCES</span></div>
+          <div id="sourceMini" class="table-wrap"></div>
+        </section>
+        <section class="admin-card">
+          <div class="card-head"><h3>最近变更</h3><span class="mini">CHANGES</span></div>
+          <div id="changeMini" class="mini-list"></div>
+        </section>
+      </div>
+      <p id="overviewMessage" class="admin-message"></p>
+    </section>
+
+    <section id="panel-pending" class="admin-panel hidden">
+      <div class="panel-heading">
+        <div><p class="eyebrow">INGEST QUEUE</p><h2>待审核采集</h2></div>
+        <div class="heading-actions">
+          <select id="pendingSource" class="small-input" aria-label="来源筛选"><option value="all">全部来源</option></select>
+          <button id="acceptExactBtn" class="secondary-btn" type="button">合并全部精确匹配</button>
+          <button id="acceptSourceBtn" class="danger-btn hidden" type="button">采纳该来源全部</button>
+          <button id="pendingReload" class="secondary-btn" type="button">刷新列表</button>
+        </div>
+      </div>
+      <p class="muted">采集器默认只进入待审核区。采纳时会新建系列/届次/阶段；也可以合并到已有届次。</p>
+      <div id="pendingList" class="pending-list"></div>
+    </section>
+
+    <section id="panel-editions" class="admin-panel hidden">
+      <div class="panel-heading">
+        <div><p class="eyebrow">EDITIONS</p><h2>赛事库</h2></div>
+        <div class="heading-actions">
+          <input id="editionSearch" class="small-input" type="search" placeholder="搜索标题 / 主办方" />
+          <button id="newEditionBtn" class="primary-btn" type="button">新建赛事</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>ID</th><th>标题</th><th>地区 / 类别</th><th>状态</th><th>公开状态</th><th>来源</th><th>操作</th></tr></thead>
+          <tbody id="editionRows"></tbody>
+        </table>
+      </div>
+      <p class="muted">归档不会删除数据；已归档赛事不会出现在公开列表。</p>
+    </section>
+
+    <section id="panel-taxonomy" class="admin-panel hidden">
+      <div class="panel-heading">
+        <div><p class="eyebrow">TAXONOMY</p><h2>系列与标签</h2></div>
+        <button id="taxonomyReload" class="secondary-btn" type="button">刷新</button>
+      </div>
+      <div class="split-grid taxonomy-grid">
+        <section class="admin-card">
+          <div class="card-head"><h3>赛事系列</h3><span class="mini">SERIES</span></div>
+          <div id="seriesList" class="mini-list"></div>
+          <form id="seriesForm" class="inline-form" data-id="">
+            <div class="card-head" style="margin-top:16px"><h3 id="seriesFormTitle">新建系列</h3><button id="seriesReset" class="tiny-btn" type="button">清空</button></div>
+            <div class="form-grid">
+              <div class="field full"><label>名称</label><input data-series-field="name" required /></div>
+              <div class="field"><label>简称</label><input data-series-field="short_name" /></div>
+              <div class="field"><label>主办方</label><input data-series-field="organizer" /></div>
+              <div class="field"><label>类别</label><select data-series-field="category"><option value="ctf">CTF</option><option value="hackathon">黑客松</option><option value="datamodel">数据竞赛</option><option value="mathmodel">数学建模</option><option value="academic">学科竞赛</option><option value="other">其他</option></select></div>
+              <div class="field"><label>地区</label><select data-series-field="region"><option value="cn">国内</option><option value="intl">国外</option></select></div>
+              <div class="field full"><label>官网</label><input data-series-field="website" /></div>
+              <div class="field full"><label>简介</label><textarea data-series-field="description"></textarea></div>
+              <label class="check-field full"><input type="checkbox" data-series-field="is_whitelist" /> 白名单 / 高含金量</label>
+            </div>
+            <div class="inline-actions"><button class="primary-btn" type="submit">保存系列</button></div>
+          </form>
+        </section>
+        <section class="admin-card">
+          <div class="card-head"><h3>标签</h3><span class="mini">TAGS</span></div>
+          <div id="tagList" class="tag-admin-list"></div>
+          <form id="tagForm" class="inline-form">
+            <div class="form-grid">
+              <div class="field"><label>类型</label><select data-tag-field="kind"><option value="direction">方向</option><option value="format">赛制</option></select></div>
+              <div class="field"><label>名称</label><input data-tag-field="name" placeholder="如 Web / AWD" required /></div>
+            </div>
+            <div class="inline-actions"><button class="primary-btn" type="submit">添加标签</button></div>
+          </form>
+        </section>
+      </div>
+    </section>
+
+    <section id="panel-sources" class="admin-panel hidden">
+      <div class="panel-heading">
+        <div><p class="eyebrow">SOURCES</p><h2>数据源</h2></div>
+        <button id="sourceReload" class="secondary-btn" type="button">刷新状态</button>
+      </div>
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>ID</th><th>名称</th><th>最近运行</th><th>结果</th><th>条数</th><th>错误</th></tr></thead>
+          <tbody id="sourceRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="panel-audit" class="admin-panel hidden">
+      <div class="panel-heading">
+        <div><p class="eyebrow">AUDIT</p><h2>审计与变更</h2></div>
+        <button id="auditReload" class="secondary-btn" type="button">刷新</button>
+      </div>
+      <div class="split-grid">
+        <section class="admin-card">
+          <div class="card-head"><h3>管理操作</h3><span class="mini">AUDIT</span></div>
+          <div id="auditList" class="mini-list"></div>
+        </section>
+        <section class="admin-card">
+          <div class="card-head"><h3>赛事变更</h3><span class="mini">CHANGES</span></div>
+          <div id="changeList" class="mini-list"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div id="editorOverlay" class="editor-overlay hidden" role="dialog" aria-modal="true" aria-label="编辑赛事">
+    <div class="editor-card">
+      <div class="editor-head">
+        <div><p class="eyebrow">EDIT</p><h2 id="editorTitle">编辑赛事</h2></div>
+        <button id="editorClose" class="icon-btn" type="button" aria-label="关闭">×</button>
+      </div>
+      <div id="editorBody"></div>
+    </div>
+  </div>
+
+  <script src="/admin.js?v=20261123e" defer></script>
+</body>
+</html>

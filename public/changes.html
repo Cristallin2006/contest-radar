@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="竞赛雷达公开变更记录：最近新增、时间调整、延期与取消的赛事。" />
+  <meta name="robots" content="index,follow" />
+  <meta name="color-scheme" content="only light" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="公开变更 · 竞赛雷达" />
+  <meta property="og:description" content="最近新增、时间调整、延期与取消的赛事。" />
+  <title>公开变更 · 竞赛雷达</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/style.css?v=20261123e" />
+  <link rel="stylesheet" href="/changes.css?v=20261123e" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">
+      <div class="brand-mark" aria-hidden="true">
+        <span class="ring r1"></span><span class="ring r2"></span><span class="dot"></span>
+      </div>
+      <div class="brand-text"><strong>竞赛雷达</strong><span>CONTEST RADAR</span></div>
+    </a>
+    <nav class="topnav" aria-label="导航">
+      <a class="view-btn" href="/">赛事列表</a>
+      <a class="view-btn active" href="/changes">公开变更</a>
+      <a class="ics-btn" href="/api/v1/ical/all.ics">ICS 订阅</a>
+    </nav>
+  </header>
+  <main class="shell changes-shell">
+    <section class="changes-hero">
+      <p class="eyebrow">PUBLIC CHANGES</p>
+      <h1>公开变更记录</h1>
+      <p class="lede">新增赛事、阶段时间调整、延期和取消都会记录在这里。公开页只展示已发布赛事。</p>
+    </section>
+    <section class="changes-panel">
+      <div class="changes-head">
+        <h2>最近变更</h2>
+        <span id="changesMeta" class="muted">加载中…</span>
+      </div>
+      <div id="changesList" class="changes-list" aria-live="polite"></div>
+    </section>
+  </main>
+  <script src="/changes.js?v=20261123e" defer></script>
+</body>
+</html>

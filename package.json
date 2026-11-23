@@ -1,0 +1,20 @@
+{
+  "name": "contest-radar",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "竞赛雷达：CTF / 黑客松 / 数据竞赛 / 数模 / 学科竞赛聚合",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cristallin2006/contest-radar.git"
+  },
+  "homepage": "https://github.com/Cristallin2006/contest-radar",
+  "bugs": {
+    "url": "https://github.com/Cristallin2006/contest-radar/issues"
+  }
+}

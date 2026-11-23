@@ -1,0 +1,26 @@
+services:
+  contest-radar:
+    build: .
+    image: contest-radar:latest
+    restart: unless-stopped
+    mem_limit: 192m
+    ports:
+      - "127.0.0.1:8789:8789"
+    environment:
+      PORT: "8789"
+      DB_PATH: /data/contest.db
+      TZ: Asia/Shanghai
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      BASE_URL: ${BASE_URL:-}
+      BACKUP_DIR: /data/backups
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+      AUTO_BACKUP: ${AUTO_BACKUP:-1}
+      AUTO_REFRESH: ${AUTO_REFRESH:-1}
+      LEGACY_SYNC: ${LEGACY_SYNC:-1}
+    volumes:
+      - ./data:/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "2"
