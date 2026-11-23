@@ -11,7 +11,11 @@ services:
       DB_PATH: /data/contest.db
       TZ: Asia/Shanghai
       ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
       BASE_URL: ${BASE_URL:-}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
       BACKUP_DIR: /data/backups
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
       AUTO_BACKUP: ${AUTO_BACKUP:-1}
