@@ -401,7 +401,7 @@ function cardHtml(item) {
   const eventLine = item.event_start
     ? `<span><span class="k">比赛</span>${fmtRange(item.event_start, item.event_end)}</span>`
     : "";
-  const modeLine = item.mode && item.mode !== "unknown" ? `<span><span class="k">形式</span>${MODE_LABEL[item.mode] || item.mode}</span>` : "";
+  const modeLine = item.mode && item.mode !== "unknown" ? `<span><span class="k">形式</span>${esc(MODE_LABEL[item.mode] || item.mode)}</span>` : "";
   const teamLine = item.team_size ? `<span><span class="k">队伍</span>${esc(item.team_size)}</span>` : "";
   const feeLine = item.fee ? `<span><span class="k">费用</span>${esc(item.fee)}</span>` : "";
   const daysBadge = days !== null && days !== undefined && ["closing", "open", "upcoming"].includes(item.status)
@@ -415,12 +415,12 @@ function cardHtml(item) {
       <div class="card-top">
         <span class="badge cat">${esc(catLabel(item))}</span>
         ${item.field_label ? `<span class="badge field">${esc(item.field_label)}</span>` : ""}
-        <span class="badge status ${statusCls}">${STATUS_LABEL[item.status] || "待定"}</span>
+        <span class="badge status ${esc(statusCls)}">${STATUS_LABEL[item.status] || "待定"}</span>
         <span class="badge confidence ${esc(item.date_confidence)}">${confidenceText(item.date_confidence)}</span>
         ${match ? `<span class="badge match ${match.blocked ? "blocked" : ""}">匹配 ${match.score}</span>` : ""}
         ${daysBadge}
       </div>
-      <h3><a href="${safeUrl(item.url)}" target="_blank" rel="noreferrer">${esc(item.name)}</a></h3>
+      <h3><a href="${esc(safeUrl(item.url))}" target="_blank" rel="noreferrer">${esc(item.name)}</a></h3>
       <p class="org">${esc(item.organizer || "主办方待补充")}${item.discipline ? ` · ${esc(item.discipline)}` : ""}</p>
       <div class="meta">
         ${deadlineLine}
@@ -433,7 +433,7 @@ function cardHtml(item) {
       <div class="card-foot">
         <span class="src">${esc(item.source_name || item.source)}</span>
         <span>${esc(String(item.last_checked || "").slice(0, 10))}</span>
-        <a class="go" href="${safeUrl(item.url)}" target="_blank" rel="noreferrer">官网 →</a>
+        <a class="go" href="${esc(safeUrl(item.url))}" target="_blank" rel="noreferrer">官网 →</a>
       </div>
     </div>
   </article>`;
@@ -795,8 +795,8 @@ function openModal(key) {
     ${matchFor(item) ? `<div class="match-reasons"><b>匹配 ${matchFor(item).score}/100</b>${matchFor(item).blocked ? '<span class="block-reason">硬条件不满足</span>' : ""}<ul>${matchFor(item).reasons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul></div>` : ""}
     <div class="actions">
       ${favButton(item, true)}
-      <a class="btn primary" href="${safeUrl(item.url)}" target="_blank" rel="noreferrer">打开官网</a>
-      ${item.source_url ? `<a class="btn" href="${safeUrl(item.source_url)}" target="_blank" rel="noreferrer">查看来源</a>` : ""}
+      <a class="btn primary" href="${esc(safeUrl(item.url))}" target="_blank" rel="noreferrer">打开官网</a>
+      ${item.source_url ? `<a class="btn" href="${esc(safeUrl(item.source_url))}" target="_blank" rel="noreferrer">查看来源</a>` : ""}
     </div>`;
   $("#modal").classList.remove("hidden");
   document.body.style.overflow = "hidden";

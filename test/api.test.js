@@ -267,6 +267,8 @@ test("timeline preview route is publicly reachable", async () => {
 test("default route, card list, and competition hall are routed correctly", async () => {
   const root = await fetch(`${BASE}/`);
   assert.equal(root.status, 200);
+  assert.equal(root.headers.get("x-frame-options"), "DENY");
+  assert.match(root.headers.get("content-security-policy"), /frame-ancestors 'none'/);
   assert.match(await root.text(), /赛事线路图/);
   const list = await fetch(`${BASE}/list`);
   assert.equal(list.status, 200);

@@ -36,6 +36,14 @@
     return esc(value).replace(/`/g, "&#96;");
   }
 
+  function safeUrl(value) {
+    if (!value) return "";
+    try {
+      const url = new URL(String(value), location.origin);
+      return /^https?:$/.test(url.protocol) ? url.href : "";
+    } catch { return ""; }
+  }
+
   function formatDate(value) {
     if (!value) return "待定";
     const s = String(value);
@@ -312,7 +320,7 @@
       <dl>
         <dt>主办方</dt><dd>${esc(c.organizer || "—")}</dd>
         <dt>时间</dt><dd>${esc(dates.join(" · ") || "待定")}</dd>
-        <dt>链接</dt><dd>${c.url ? `<a href="${attr(c.url)}" target="_blank" rel="noreferrer">${esc(c.url)}</a>` : "—"}</dd>
+        <dt>链接</dt><dd>${c.url ? `<a href="${attr(safeUrl(c.url))}" target="_blank" rel="noreferrer">${esc(c.url)}</a>` : "—"}</dd>
         <dt>原始来源</dt><dd>${esc(item.source)} / ${esc(item.external_id)}</dd>
       </dl>
       <div class="pending-actions">
@@ -345,7 +353,7 @@
       </header>
       <dl>
         <dt>提交者</dt><dd>${esc(item.display_name || item.login)}（@${esc(item.login)}）</dd>
-        <dt>官网</dt><dd>${item.url ? `<a href="${attr(item.url)}" target="_blank" rel="noreferrer">${esc(item.url)}</a>` : "—"}</dd>
+        <dt>官网</dt><dd>${item.url ? `<a href="${attr(safeUrl(item.url))}" target="_blank" rel="noreferrer">${esc(item.url)}</a>` : "—"}</dd>
         <dt>报名截止</dt><dd>${esc(item.expected_deadline || "未提供")}</dd>
         <dt>简介</dt><dd>${esc(item.description)}</dd>
         <dt>提交时间</dt><dd>${esc(formatDate(item.created_at))}</dd>

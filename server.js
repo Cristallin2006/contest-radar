@@ -332,6 +332,31 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
   const pathname = url.pathname;
 
+  // Conservative defaults: no framing, no object embedding, no inline script.
+  // Inline styles remain allowed because the editorial layouts use style attributes.
+  res.setHeader("x-content-type-options", "nosniff");
+  res.setHeader("x-frame-options", "DENY");
+  res.setHeader("referrer-policy", "strict-origin-when-cross-origin");
+  res.setHeader("permissions-policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  res.setHeader("cross-origin-opener-policy", "same-origin");
+  res.setHeader("content-security-policy", [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "script-src 'self' https://static.cloudflareinsights.com",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https://avatars.githubusercontent.com",
+    "connect-src 'self' https://cloudflareinsights.com",
+    "font-src 'self'",
+    "manifest-src 'self'",
+  ].join("; "));
+  const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim();
+  if (forwardedProto === "https" || String(BASE_URL || "").startsWith("https://")) {
+    res.setHeader("strict-transport-security", "max-age=31536000; includeSubDomains");
+  }
+
   try {
     if (await handleAuth(req, res, url)) return;
     if (await handlePublicApi(req, res, url, { lastRefresh, refreshing })) return;

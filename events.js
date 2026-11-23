@@ -81,6 +81,16 @@ function nowMs() {
   return Date.now();
 }
 
+function httpUrl(value) {
+  if (value === null || value === undefined || value === "") return null;
+  try {
+    const url = new URL(String(value));
+    return /^https?:$/.test(url.protocol) ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
 function timestamp(value) {
   if (!value) return null;
   const s = String(value);
@@ -405,8 +415,8 @@ export function listEditions(filters = {}, { admin = false } = {}) {
     items.sort(byUrgency);
   }
 
-  const size = Math.max(1, Math.min(100, Number(filters.size || 20)));
-  const page = Math.max(1, Number(filters.page || 1));
+  const size = Math.max(1, Math.min(100, Math.floor(Number(filters.size) || 20)));
+  const page = Math.max(1, Math.floor(Number(filters.page) || 1));
   const total = items.length;
   const paged = items.slice((page - 1) * size, page * size);
   return {
@@ -672,8 +682,8 @@ function editionFields(input, current = null) {
     signup_org: SIGNUP_ORGS.includes(input.signup_org) ? input.signup_org : (current?.signup_org || "unknown"),
     signup_channel: SIGNUP_CHANNELS.includes(input.signup_channel) ? input.signup_channel : (current?.signup_channel || "unknown"),
     internal_deadline_note: input.internal_deadline_note !== undefined ? (input.internal_deadline_note || null) : (current?.internal_deadline_note ?? null),
-    signup_url: input.signup_url !== undefined ? (input.signup_url || null) : (current?.signup_url ?? null),
-    source_url: input.source_url !== undefined ? (input.source_url || null) : (current?.source_url ?? null),
+    signup_url: input.signup_url !== undefined ? httpUrl(input.signup_url) : (current?.signup_url ?? null),
+    source_url: input.source_url !== undefined ? httpUrl(input.source_url) : (current?.source_url ?? null),
     team_size_min: input.team_size_min !== undefined ? (Number(input.team_size_min) || null) : (current?.team_size_min ?? null),
     team_size_max: input.team_size_max !== undefined ? (Number(input.team_size_max) || null) : (current?.team_size_max ?? null),
     eligibility: input.eligibility !== undefined ? (input.eligibility || null) : (current?.eligibility ?? null),
