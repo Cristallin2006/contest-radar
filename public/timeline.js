@@ -32,9 +32,9 @@
     } catch { return ""; }
   };
 
-  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Shanghai" });
-  const rangeStart = new Date(`${today}T00:00:00+08:00`).getTime() - 3 * DAY;
-  const TODAY_DAY = Math.round((new Date(`${today}T00:00:00+08:00`).getTime() - rangeStart) / DAY);
+  let today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Shanghai" });
+  let rangeStart = new Date(`${today}T00:00:00+08:00`).getTime() - 3 * DAY;
+  const TODAY_DAY = 3;
 
   const state = {
     region: "cn",
@@ -480,17 +480,51 @@
     return items;
   }
 
-  async function init() {
-    bind();
+  function refreshToday() {
+    const next = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Shanghai" });
+    if (next === today) return false;
+    today = next;
+    rangeStart = new Date(`${today}T00:00:00+08:00`).getTime() - 3 * DAY;
+    state.day = TODAY_DAY;
+    return true;
+  }
+
+  let loading = false;
+  async function loadEvents() {
+    if (loading) return;
+    loading = true;
+    const dateChanged = refreshToday();
     try {
       const raw = await fetchAllEditions();
       allEvents = raw.map(buildEvent).filter(Boolean).sort((a, b) => a.firstSort - b.firstSort);
+      eventById.clear();
       for (const event of allEvents) eventById.set(event.id, event);
+      if (dateChanged) state.stageKey = null;
       renderView();
     } catch (error) {
-      $("tracks").innerHTML = `<div class="timeline-loading">赛事加载失败：${esc(error.message || error)}</div>`;
-      $("result-count").textContent = "加载失败";
+      if (!allEvents.length) {
+        $("tracks").innerHTML = `<div class="timeline-loading">赛事加载失败：${esc(error.message || error)}</div>`;
+        $("result-count").textContent = "加载失败";
+      }
+    } finally {
+      loading = false;
     }
+  }
+
+  async function init() {
+    bind();
+    await loadEvents();
+    // Newly approved events can appear without a manual reload; the window
+    // also advances when the Shanghai calendar day changes.
+    setInterval(() => {
+      if (document.visibilityState === "visible") loadEvents();
+    }, 10 * 60 * 1000);
+    setInterval(() => {
+      if (document.visibilityState === "visible" && refreshToday()) loadEvents();
+    }, 60 * 1000);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") loadEvents();
+    });
   }
 
   init();
