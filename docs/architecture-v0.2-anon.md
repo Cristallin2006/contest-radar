@@ -256,7 +256,7 @@ else -> 报名截止 / 待定
 
 ## 6. 接口设计
 
-前缀 `/api/v1`，JSON；公开接口不加认证；管理接口加 `X-Admin-Token`。
+前缀 `/api/v1`，JSON；公开接口不加认证；管理接口使用独立管理员认证，细节不公开。
 
 ### 6.1 公开 API
 
@@ -295,7 +295,7 @@ else -> 报名截止 / 待定
 | POST | `/admin/backup` | 手动备份 |
 | GET | `/admin/health` | 数据库/磁盘/任务状态 |
 
-- 认证：`X-Admin-Token: <ADMIN_TOKEN>`；失败 401，不区分“令牌错误/缺失”。
+- 认证：独立管理员令牌；失败统一返回 401，不区分“令牌错误/缺失”。
 - 写操作校验 `Origin` 与 `Content-Type`；管理页可选 Nginx Basic Auth/IP 白名单。
 - 不做登录、Cookie、CSRF Token。
 
@@ -393,9 +393,9 @@ else -> 报名截止 / 待定
 ### 9.1 认证与权限
 
 - 没有用户账号；唯一管理凭证是 `ADMIN_TOKEN`（≥32 字节随机）。
-- 管理 API 只认 `X-Admin-Token`，不认 Cookie；失败统一 401。
+- 管理接口只认独立管理员认证，不认用户 Cookie；失败统一 401。
 - 管理页把令牌存 `sessionStorage`，不写 localStorage；关闭标签页清除。
-- 可选：Nginx 对 `/admin` 和 `/api/v1/admin/*` 做 IP 白名单/VPN/Basic Auth。
+- 可选：反向代理层对管理入口做 IP 白名单/VPN/Basic Auth。
 - 审计日志记录 `actor_label`（如 `admin-token`）和 IP，不记录令牌。
 
 ### 9.2 公开面

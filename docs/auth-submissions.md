@@ -72,9 +72,7 @@ GET  /api/v1/me
 POST /api/v1/submissions
 GET  /api/v1/submissions/mine
 
-GET  /api/v1/admin/submissions?state=pending
-POST /api/v1/admin/submissions/:id/accept
-POST /api/v1/admin/submissions/:id/reject
+管理员审核接口仅内部使用，不公开接口细节。
 ```
 
 `POST /api/v1/submissions` 要求登录，限制每用户每天 5 条。

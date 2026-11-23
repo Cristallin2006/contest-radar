@@ -118,11 +118,7 @@ npm test
 ADMIN_TOKEN=dev-token AUTO_REFRESH=0 DB_PATH=/tmp/contest.db npm start
 ```
 
-数据每 6 小时自动刷新。手动刷新（需要 `.env` 里的 `ADMIN_TOKEN`）：
-
-```bash
-curl -X POST -H "x-admin-token: $ADMIN_TOKEN" http://127.0.0.1:8789/api/refresh
-```
+数据每 6 小时自动刷新。管理员操作不公开文档。
 
 ## 接口
 
@@ -165,25 +161,7 @@ curl -X POST -H "x-admin-token: $ADMIN_TOKEN" http://127.0.0.1:8789/api/refresh
 - `GET /api/v1/ical/region/{cn|intl}.ics`
 - `GET /api/v1/ical/category/{category}.ics`
 
-管理接口（`X-Admin-Token`）：
-
-- `GET /api/v1/admin/overview`
-- `GET /api/v1/admin/ingest?state=pending`
-- `POST /api/v1/admin/ingest/{id}/accept`（可带 `{"edition_id": 123}` 合并）
-- `POST /api/v1/admin/ingest/{id}/reject`
-- `GET/POST /api/v1/admin/editions`
-- `GET/PATCH/DELETE /api/v1/admin/editions/{id}`
-- `POST /api/v1/admin/editions/{id}/stages`
-- `PATCH/DELETE /api/v1/admin/stages/{id}`
-- `GET/POST /api/v1/admin/series`
-- `GET/POST /api/v1/admin/tags`
-- `GET /api/v1/admin/sources`
-- `POST /api/v1/admin/refresh`
-- `POST /api/v1/admin/backup`
-- `GET /api/v1/admin/changes`
-- `GET /api/v1/admin/audit`
-
-管理页：`/admin`，令牌只存 `sessionStorage`。
+管理接口不公开文档，仅由管理员在受保护的私有后台使用。
 
 ### 采集与审核
 
@@ -248,7 +226,7 @@ npm test
 - `/robots.txt`：允许抓取公开页，禁止 `/admin`。
 - 每日 03:00（容器 `TZ=Asia/Shanghai`）自动 SQLite 备份。
 - 备份保留 `BACKUP_RETENTION_DAYS` 天（默认 14），只清理 `contest-*.db`。
-- `AUTO_BACKUP=0` 可关闭；手动备份仍可用 `/api/v1/admin/backup`。
+- `AUTO_BACKUP=0` 可关闭；备份由管理员在私有后台操作。
 
 
 ## 项目结构
