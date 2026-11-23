@@ -242,5 +242,8 @@ test("default route, card list, and competition hall are routed correctly", asyn
   assert.match(await list.text(), /竞赛雷达 · Contest Radar/);
   const hall = await fetch(`${BASE}/hall`);
   assert.equal(hall.status, 200);
-  assert.match(await hall.text(), /竞赛馆/);
+  const hallBody = await hall.text();
+  assert.match(hallBody, /竞赛馆/);
+  assert.match(hallBody, /hallDetail/);
+  assert.doesNotMatch(hallBody, /\/list\?open=/);
 });
