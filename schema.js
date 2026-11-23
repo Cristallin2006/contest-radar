@@ -1,7 +1,8 @@
 import { db } from "./db.js";
 import { ctfDisplayName } from "./collectors/ctf.js";
+import { classifyEdition } from "./classify.js";
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 const NOW = () => new Date().toISOString();
 
@@ -74,6 +75,15 @@ CREATE TABLE IF NOT EXISTS event_editions (
   title                 TEXT NOT NULL,
   organizer             TEXT,
   description           TEXT,
+  field                 TEXT NOT NULL DEFAULT 'other',
+  field_confidence      TEXT NOT NULL DEFAULT 'low',
+  field_source          TEXT NOT NULL DEFAULT 'legacy',
+  field_reason          TEXT,
+  content_type          TEXT NOT NULL DEFAULT 'competition',
+  content_confidence    TEXT NOT NULL DEFAULT 'low',
+  content_source        TEXT NOT NULL DEFAULT 'legacy',
+  content_reason        TEXT,
+  source_category       TEXT,
   year                  INTEGER,
   region                TEXT NOT NULL DEFAULT 'cn',
   category              TEXT NOT NULL DEFAULT 'other',
@@ -199,6 +209,22 @@ CREATE TABLE IF NOT EXISTS settings (
   if (!editionCols.includes("description")) {
     db.exec("ALTER TABLE event_editions ADD COLUMN description TEXT");
   }
+  const classificationColumns = [
+    ["field", "TEXT NOT NULL DEFAULT 'other'"],
+    ["field_confidence", "TEXT NOT NULL DEFAULT 'low'"],
+    ["field_source", "TEXT NOT NULL DEFAULT 'legacy'"],
+    ["field_reason", "TEXT"],
+    ["content_type", "TEXT NOT NULL DEFAULT 'competition'"],
+    ["content_confidence", "TEXT NOT NULL DEFAULT 'low'"],
+    ["content_source", "TEXT NOT NULL DEFAULT 'legacy'"],
+    ["content_reason", "TEXT"],
+    ["source_category", "TEXT"],
+  ];
+  for (const [name, type] of classificationColumns) {
+    if (!editionCols.includes(name)) db.exec(`ALTER TABLE event_editions ADD COLUMN ${name} ${type}`);
+  }
+  db.exec("CREATE INDEX IF NOT EXISTS idx_edition_field ON event_editions(field)");
+  db.exec("CREATE INDEX IF NOT EXISTS idx_edition_content ON event_editions(content_type)");
 
   seedTags();
   setMeta("schema_version", String(SCHEMA_VERSION));
@@ -207,7 +233,8 @@ CREATE TABLE IF NOT EXISTS settings (
   const shouldMigrateLegacy = !getMeta("legacy_migrated_at") || process.env.MIGRATE_LEGACY === "1";
   const migrated = shouldMigrateLegacy ? migrateLegacyCompetitions() : 0;
   backfillLegacyFields();
-  return { version: SCHEMA_VERSION, migrated };
+  const classified = backfillClassification();
+  return { version: SCHEMA_VERSION, migrated, classified };
 }
 
 export function setMeta(key, value) {
@@ -561,6 +588,47 @@ function backfillLegacyFields() {
     WHERE legacy_key IS NOT NULL AND (organizer IS NULL OR description IS NULL)
   `).run();
   return Number(result.changes || 0);
+}
+
+function backfillClassification() {
+  const rows = db.prepare(`
+    SELECT id, title, description, category, source, source_category,
+           field, field_confidence, field_source, field_reason,
+           content_type, content_confidence, content_source, content_reason
+    FROM event_editions
+  `).all();
+  let changed = 0;
+  for (const row of rows) {
+    if (row.field_source === "manual" && row.content_source === "manual") continue;
+    const result = classifyEdition(row);
+    const category = row.category === "datamodel" && result.field !== "data"
+      ? "academic"
+      : row.category;
+    const nextField = row.field_source === "manual" ? row.field : result.field;
+    const nextFieldConfidence = row.field_source === "manual" ? row.field_confidence : result.field_confidence;
+    const nextFieldSource = row.field_source === "manual" ? "manual" : result.field_source;
+    const nextFieldReason = row.field_source === "manual" ? row.field_reason : result.field_reason;
+    const nextContent = row.content_source === "manual" ? row.content_type : result.content_type;
+    const nextContentConfidence = row.content_source === "manual" ? row.content_confidence : result.content_confidence;
+    const nextContentSource = row.content_source === "manual" ? "manual" : result.content_source;
+    const nextContentReason = row.content_source === "manual" ? row.content_reason : result.content_reason;
+    const differs = category !== row.category || nextField !== row.field ||
+      nextFieldConfidence !== row.field_confidence || nextFieldSource !== row.field_source ||
+      nextFieldReason !== row.field_reason || nextContent !== row.content_type ||
+      nextContentConfidence !== row.content_confidence || nextContentSource !== row.content_source ||
+      nextContentReason !== row.content_reason;
+    if (!differs) continue;
+    db.prepare(`
+      UPDATE event_editions SET category = ?, field = ?, field_confidence = ?, field_source = ?,
+        field_reason = ?, content_type = ?, content_confidence = ?, content_source = ?,
+        content_reason = ? WHERE id = ?
+    `).run(
+      category, nextField, nextFieldConfidence, nextFieldSource, nextFieldReason,
+      nextContent, nextContentConfidence, nextContentSource, nextContentReason, row.id,
+    );
+    changed += 1;
+  }
+  return changed;
 }
 
 function seedTags() {

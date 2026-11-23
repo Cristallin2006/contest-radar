@@ -8,7 +8,7 @@ const REFERER = "https://www.gxxsjs.com/home/homepage";
 
 function categoryOf(name) {
   if (/数学建模|统计建模/.test(name)) return "mathmodel";
-  if (/大数据|数据科学|数据分析|数据挖掘|算法/.test(name)) return "datamodel";
+  if (/大数据|数据科学|数据分析|数据挖掘|数据统计/.test(name)) return "datamodel";
   if (/黑客松|hackathon/i.test(name)) return "hackathon";
   return "academic";
 }
@@ -57,6 +57,7 @@ export async function collect() {
         name: candidateName,
         organizer: sponsor,
         category: categoryOf(item.competitionName),
+        source_category: `range:${item.competitionRange || "unknown"}`,
         region: "cn",
         discipline: clean(["高校学生竞赛网", "国赛", round].filter(Boolean).join(" / "), 100),
         mode: "unknown",

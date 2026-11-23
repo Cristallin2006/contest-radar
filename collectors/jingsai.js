@@ -61,6 +61,7 @@ export async function collect() {
       name: title,
       organizer: organizerOf(text) || "我爱竞赛网收录",
       category,
+      source_category: discipline,
       region: "cn",
       discipline,
       mode: /线上|网络|云上/.test(text) ? "online" : /线下|现场/.test(text) ? "offline" : "unknown",

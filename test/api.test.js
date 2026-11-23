@@ -76,7 +76,7 @@ test("public health exposes schema version", async () => {
   const { res, data } = await json("/api/v1/health");
   assert.equal(res.status, 200);
   assert.equal(data.ok, true);
-  assert.equal(data.schema_version, 2);
+  assert.equal(data.schema_version, 3);
 });
 
 let editionId;
@@ -111,6 +111,8 @@ test("admin can create a published edition with stages and tags", async () => {
   editionId = data.id;
   stageId = data.stages.find((s) => s.kind === "online").id;
   assert.equal(data.status, "open");
+  assert.equal(data.field, "cyber");
+  assert.equal(data.content_type, "competition");
   assert.deepEqual(data.tags, { direction: ["Web"], format: ["Jeopardy"] });
 });
 
@@ -122,6 +124,27 @@ test("public list and detail expose the new edition", async () => {
   assert.equal(detail.res.status, 200);
   assert.equal(detail.data.title, "2027 测试邀请赛");
   assert.equal(detail.data.stages.length, 2);
+});
+
+test("non-competition content is hidden from public queries", async () => {
+  const { data } = await json("/api/v1/admin/editions", {
+    method: "POST",
+    admin: true,
+    body: JSON.stringify({
+      title: "测试志愿者招募活动",
+      category: "academic",
+      content_type: "activity",
+      publish_state: "draft",
+      source: "manual",
+    }),
+  });
+  const publicList = await json("/api/v1/editions?all_dates=1&q=测试志愿者招募");
+  assert.equal(publicList.data.total, 0);
+  const publicDetail = await json(`/api/v1/editions/${data.id}`);
+  assert.equal(publicDetail.res.status, 404);
+  const adminDetail = await json(`/api/v1/admin/editions/${data.id}`, { admin: true });
+  assert.equal(adminDetail.res.status, 200);
+  assert.equal(adminDetail.data.content_type, "activity");
 });
 
 test("stage time update increments ICS sequence and changes ETag", async () => {
@@ -147,7 +170,7 @@ test("backup endpoint writes a restorable SQLite file", async () => {
   assert.equal(res.status, 200);
   assert.ok(fs.existsSync(data.file));
   const copy = new (await import("node:sqlite")).DatabaseSync(data.file, { readOnly: true });
-  assert.equal(copy.prepare("SELECT COUNT(*) AS n FROM event_editions").get().n, 1);
+  assert.ok(copy.prepare("SELECT COUNT(*) AS n FROM event_editions").get().n >= 1);
   copy.close();
 });
 
@@ -156,7 +179,7 @@ test("admin overview reports the created edition", async () => {
   assert.equal(res.status, 200);
   assert.equal(data.editions.published, 1);
   assert.equal(data.stages, 2);
-  assert.equal(data.schema_version, 2);
+  assert.equal(data.schema_version, 3);
 });
 
 test("admin can manage series and tags", async () => {

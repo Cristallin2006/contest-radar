@@ -29,12 +29,15 @@
 - 采集 → 待审核 → 合并/发布 → 公开变更
 - 公开 v1 API、公共 ICS、阶段级 VALARM
 - 赛事线路图视图：按阶段时间轴浏览，移动端降级为列表
+- 竞赛方向分类：网络安全 / 计算机 / 数据 / 数学 / 电子 / 工程 / 理科 / 设计 / 商科 / 外语 / 人文 / 体育
+- 内容类型过滤：竞赛 / 志愿者 / 会议 / 课程 / 活动
 - 本地收藏、我的赛程、本地画像、匹配评分
 - 单管理员令牌，无账号/队伍/服务端履历
 - SQLite 每日备份、sitemap、robots
 
 ## 文档
 
+- [方向分类与内容类型审计](docs/classification-audit.md)
 - [匿名版需求文档](docs/requirements-v0.2-anon.md)
 - [匿名版架构设计](docs/architecture-v0.2-anon.md)
 - [v0.1 → v0.2-anon 变更说明](docs/changes-v0.1-to-v0.2-anon.md)
@@ -151,6 +154,7 @@ curl -X POST -H "x-admin-token: $ADMIN_TOKEN" http://127.0.0.1:8789/api/refresh
 - `GET /api/v1/health`
 - `GET /api/v1/taxonomy`
 - `GET /api/v1/editions?region=cn&category=ctf&status=open&q=...&page=1&size=20`
+- `GET /api/v1/editions?field=software&tech=1`（方向 / 技术向过滤）
 - `GET /api/v1/editions/{id}`
 - `GET /api/v1/stats`
 - `GET /api/v1/changes`

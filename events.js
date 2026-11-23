@@ -1,4 +1,5 @@
 import { db } from "./db.js";
+import { classifyCompetition, CONTENT_TYPE_LABELS, FIELD_LABELS } from "./classify.js";
 import {
   normalizeCategory,
   normalizeRegion,
@@ -269,6 +270,8 @@ export function presentEdition(row, stageRows = [], tagRows = [], now = nowMs())
     status_label: STATUS_LABELS[status] || status,
     lifecycle_label: LIFECYCLE_LABELS[row.lifecycle] || row.lifecycle,
     category_label: CATEGORY_LABELS[row.category] || row.category,
+    field_label: FIELD_LABELS[row.field] || row.field,
+    content_type_label: CONTENT_TYPE_LABELS[row.content_type] || row.content_type,
     region_label: REGION_LABELS[row.region] || row.region,
     source_name: SOURCE_NAMES[row.source] || row.source,
     next_start: nextStart,
@@ -302,6 +305,7 @@ export function listEditions(filters = {}, { admin = false } = {}) {
   const args = [];
   if (!admin) {
     where.push("e.publish_state = 'published'");
+    where.push("e.content_type = 'competition'");
   } else if (filters.publish_state) {
     where.push("e.publish_state = ?");
     args.push(filters.publish_state);
@@ -313,6 +317,20 @@ export function listEditions(filters = {}, { admin = false } = {}) {
   if (filters.category && filters.category !== "all") {
     where.push("e.category = ?");
     args.push(filters.category);
+  }
+  if (filters.field && filters.field !== "all") {
+    const fields = String(filters.field).split(",").map((x) => x.trim()).filter(Boolean);
+    if (fields.length) {
+      where.push(`e.field IN (${fields.map(() => "?").join(",")})`);
+      args.push(...fields);
+    }
+  }
+  if (filters.content_type && filters.content_type !== "all") {
+    where.push("e.content_type = ?");
+    args.push(filters.content_type);
+  }
+  if (filters.tech) {
+    where.push("e.field IN ('cyber','software','data','math','electronics','engineering')");
   }
   if (filters.whitelist === "1" || filters.whitelist === 1 || filters.whitelist === true) {
     where.push("COALESCE(s.is_whitelist, 0) = 1");
@@ -415,7 +433,7 @@ function statsOf(items) {
 export function getEdition(id, { admin = false } = {}) {
   const row = db.prepare(baseEditionSql("WHERE e.id = ?")).get(Number(id));
   if (!row) return null;
-  if (!admin && row.publish_state !== "published") return null;
+  if (!admin && (row.publish_state !== "published" || row.content_type !== "competition")) return null;
   const stages = db.prepare(`
     SELECT * FROM event_stages WHERE edition_id = ?
     ORDER BY sort_order, COALESCE(deadline_at, starts_at, ends_at), id
@@ -448,6 +466,8 @@ export function getTaxonomy() {
       { id: "tentative", label: "暂定" },
       { id: "unknown", label: "待定" },
     ],
+    fields: Object.entries(FIELD_LABELS).map(([id, label]) => ({ id, label })),
+    content_types: Object.entries(CONTENT_TYPE_LABELS).map(([id, label]) => ({ id, label })),
     modes: [
       { id: "online", label: "线上" },
       { id: "offline", label: "线下" },
@@ -607,14 +627,45 @@ function editionFields(input, current = null) {
   const now = nowIso();
   const title = String(input.title ?? current?.title ?? "").trim();
   if (!title) throw new Error("赛事标题不能为空");
+  const category = normalizeCategory(input.category ?? current?.category);
+  const description = input.description !== undefined ? (input.description || null) : (current?.description ?? null);
+  const sourceCategory = input.source_category !== undefined ? (input.source_category || null) : (current?.source_category ?? null);
+  const classified = classifyCompetition({
+    title,
+    description,
+    category,
+    source: input.source ?? current?.source,
+    source_category: sourceCategory,
+  });
+  const fieldExplicit = input.field !== undefined;
+  const contentExplicit = input.content_type !== undefined;
+  const fieldManual = fieldExplicit && !input.field_source;
+  const contentManual = contentExplicit && !input.content_source;
+  const field = fieldExplicit ? (input.field || "other") : (current?.field_source === "manual" ? current.field : classified.field);
+  const fieldConfidence = fieldExplicit ? (input.field_confidence || (fieldManual ? "high" : classified.field_confidence)) : (current?.field_source === "manual" ? current.field_confidence : classified.field_confidence);
+  const fieldSource = fieldExplicit ? (input.field_source || "manual") : (current?.field_source === "manual" ? "manual" : classified.field_source);
+  const fieldReason = fieldExplicit ? (input.field_reason || (fieldManual ? "管理员手动分类" : classified.field_reason)) : (current?.field_source === "manual" ? current.field_reason : classified.field_reason);
+  const contentType = contentExplicit ? (input.content_type || "competition") : (current?.content_source === "manual" ? current.content_type : classified.content_type);
+  const contentConfidence = contentExplicit ? (input.content_confidence || (contentManual ? "high" : classified.content_confidence)) : (current?.content_source === "manual" ? current.content_confidence : classified.content_confidence);
+  const contentSource = contentExplicit ? (input.content_source || "manual") : (current?.content_source === "manual" ? "manual" : classified.content_source);
+  const contentReason = contentExplicit ? (input.content_reason || (contentManual ? "管理员手动分类" : classified.content_reason)) : (current?.content_source === "manual" ? current.content_reason : classified.content_reason);
   return {
     series_id: input.series_id !== undefined ? (input.series_id ? Number(input.series_id) : null) : (current?.series_id ?? null),
     title,
     organizer: input.organizer !== undefined ? (input.organizer || null) : (current?.organizer ?? null),
-    description: input.description !== undefined ? (input.description || null) : (current?.description ?? null),
+    description,
+    field,
+    field_confidence: fieldConfidence,
+    field_source: fieldSource,
+    field_reason: fieldReason,
+    content_type: contentType,
+    content_confidence: contentConfidence,
+    content_source: contentSource,
+    content_reason: contentReason,
+    source_category: sourceCategory,
     year: input.year !== undefined ? Number(input.year) || null : (current?.year ?? null),
     region: normalizeRegion(input.region ?? current?.region, input.category ?? current?.category),
-    category: normalizeCategory(input.category ?? current?.category),
+    category,
     lifecycle: LIFECYCLES.includes(input.lifecycle) ? input.lifecycle : (current?.lifecycle || "normal"),
     status_override: input.status_override !== undefined ? (input.status_override || null) : (current?.status_override ?? null),
     signup_org: SIGNUP_ORGS.includes(input.signup_org) ? input.signup_org : (current?.signup_org || "unknown"),
@@ -644,36 +695,46 @@ function editionFields(input, current = null) {
 
 function insertEdition(fields) {
   return Number(db.prepare(`
-    INSERT INTO event_editions (series_id, title, organizer, description, year, region, category,
-      lifecycle, status_override, signup_org, signup_channel, internal_deadline_note, signup_url,
-      source_url, team_size_min, team_size_max, eligibility, difficulty, fee, prizes, source,
-      source_rank, date_confidence, verified_at, publish_state, external_ref, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO event_editions (series_id, title, organizer, description, field, field_confidence,
+      field_source, field_reason, content_type, content_confidence, content_source, content_reason,
+      source_category, year, region, category, lifecycle, status_override, signup_org, signup_channel,
+      internal_deadline_note, signup_url, source_url, team_size_min, team_size_max, eligibility,
+      difficulty, fee, prizes, source, source_rank, date_confidence, verified_at, publish_state,
+      external_ref, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
-    fields.series_id, fields.title, fields.organizer, fields.description, fields.year, fields.region,
-    fields.category, fields.lifecycle, fields.status_override, fields.signup_org, fields.signup_channel,
-    fields.internal_deadline_note, fields.signup_url, fields.source_url, fields.team_size_min,
-    fields.team_size_max, fields.eligibility, fields.difficulty, fields.fee, fields.prizes,
-    fields.source, fields.source_rank, fields.date_confidence, fields.verified_at,
-    fields.publish_state, fields.external_ref, fields.created_at, fields.updated_at,
+    fields.series_id, fields.title, fields.organizer, fields.description, fields.field,
+    fields.field_confidence, fields.field_source, fields.field_reason, fields.content_type,
+    fields.content_confidence, fields.content_source, fields.content_reason, fields.source_category,
+    fields.year, fields.region, fields.category, fields.lifecycle, fields.status_override,
+    fields.signup_org, fields.signup_channel, fields.internal_deadline_note, fields.signup_url,
+    fields.source_url, fields.team_size_min, fields.team_size_max, fields.eligibility,
+    fields.difficulty, fields.fee, fields.prizes, fields.source, fields.source_rank,
+    fields.date_confidence, fields.verified_at, fields.publish_state, fields.external_ref,
+    fields.created_at, fields.updated_at,
   ).lastInsertRowid);
 }
 
 function updateEditionRow(id, fields) {
   db.prepare(`
-    UPDATE event_editions SET series_id = ?, title = ?, organizer = ?, description = ?, year = ?,
-      region = ?, category = ?, lifecycle = ?, status_override = ?, signup_org = ?,
+    UPDATE event_editions SET series_id = ?, title = ?, organizer = ?, description = ?, field = ?,
+      field_confidence = ?, field_source = ?, field_reason = ?, content_type = ?,
+      content_confidence = ?, content_source = ?, content_reason = ?, source_category = ?,
+      year = ?, region = ?, category = ?, lifecycle = ?, status_override = ?, signup_org = ?,
       signup_channel = ?, internal_deadline_note = ?, signup_url = ?, source_url = ?,
       team_size_min = ?, team_size_max = ?, eligibility = ?, difficulty = ?, fee = ?, prizes = ?,
       source = ?, source_rank = ?, date_confidence = ?, verified_at = ?, publish_state = ?,
       external_ref = ?, updated_at = ? WHERE id = ?
   `).run(
-    fields.series_id, fields.title, fields.organizer, fields.description, fields.year, fields.region,
-    fields.category, fields.lifecycle, fields.status_override, fields.signup_org, fields.signup_channel,
-    fields.internal_deadline_note, fields.signup_url, fields.source_url, fields.team_size_min,
-    fields.team_size_max, fields.eligibility, fields.difficulty, fields.fee, fields.prizes,
-    fields.source, fields.source_rank, fields.date_confidence, fields.verified_at,
-    fields.publish_state, fields.external_ref, fields.updated_at, id,
+    fields.series_id, fields.title, fields.organizer, fields.description, fields.field,
+    fields.field_confidence, fields.field_source, fields.field_reason, fields.content_type,
+    fields.content_confidence, fields.content_source, fields.content_reason, fields.source_category,
+    fields.year, fields.region, fields.category, fields.lifecycle, fields.status_override,
+    fields.signup_org, fields.signup_channel, fields.internal_deadline_note, fields.signup_url,
+    fields.source_url, fields.team_size_min, fields.team_size_max, fields.eligibility,
+    fields.difficulty, fields.fee, fields.prizes, fields.source, fields.source_rank,
+    fields.date_confidence, fields.verified_at, fields.publish_state, fields.external_ref,
+    fields.updated_at, id,
   );
 }
 
@@ -697,7 +758,7 @@ export function updateEdition(id, input, { actor = "admin", ip = null } = {}) {
     if (!current) throw new Error("赛事不存在");
     const fields = editionFields(input, current);
     const diff = {};
-    const keys = ["title", "organizer", "description", "year", "region", "category", "lifecycle", "status_override", "publish_state", "signup_url", "source_url", "fee", "prizes", "eligibility", "difficulty", "date_confidence"];
+    const keys = ["title", "organizer", "description", "field", "content_type", "year", "region", "category", "lifecycle", "status_override", "publish_state", "signup_url", "source_url", "fee", "prizes", "eligibility", "difficulty", "date_confidence"];
     for (const key of keys) {
       if (String(current[key] ?? "") !== String(fields[key] ?? "")) diff[key] = { from: current[key] ?? null, to: fields[key] ?? null };
     }

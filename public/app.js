@@ -160,6 +160,9 @@ function adaptEdition(e) {
     source_name: e.source_name || e.source,
     tag_direction: e.tags?.direction || [],
     tag_format: e.tags?.format || [],
+    field: e.field || "other",
+    field_label: e.field_label || null,
+    content_type: e.content_type || "competition",
     series_whitelist: Boolean(e.series_whitelist),
     date_confidence: e.date_confidence || "unknown",
     last_checked: e.verified_at || e.last_checked || null,
@@ -411,6 +414,7 @@ function cardHtml(item) {
     <div class="card-body">
       <div class="card-top">
         <span class="badge cat">${esc(catLabel(item))}</span>
+        ${item.field_label ? `<span class="badge field">${esc(item.field_label)}</span>` : ""}
         <span class="badge status ${statusCls}">${STATUS_LABEL[item.status] || "待定"}</span>
         <span class="badge confidence ${esc(item.date_confidence)}">${confidenceText(item.date_confidence)}</span>
         ${match ? `<span class="badge match ${match.blocked ? "blocked" : ""}">匹配 ${match.score}</span>` : ""}
@@ -761,6 +765,7 @@ function openModal(key) {
   const color = catColor(item);
   const rows = [
     ["系列", item.series_name || "一次性赛事"],
+    ["方向", item.field_label || "待细分"],
     ["报名截止", item.registration_deadline ? fmtDate(item.registration_deadline) : "待定"],
     ["比赛时间", item.event_start ? fmtRange(item.event_start, item.event_end) : "待定"],
     ["形式", MODE_LABEL[item.mode] || item.mode || "待定"],

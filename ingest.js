@@ -19,6 +19,7 @@ import {
   yearForCandidate,
 } from "./schema.js";
 import { ctfDisplayName } from "./collectors/ctf.js";
+import { classifyCompetition } from "./classify.js";
 
 const nowIso = () => new Date().toISOString();
 
@@ -81,6 +82,14 @@ export function stageCandidates(rows, sourceId) {
       const source = sourceId || candidate.source || "unknown";
       const externalId = externalIdOf(candidate, source);
       const fingerprint = fingerprintOf(candidate);
+      const classified = classifyCompetition({
+        title: candidate.name,
+        description: candidate.description,
+        category: candidate.category,
+        source: source,
+        source_category: candidate.source_category,
+      });
+      candidate.classification = classified;
       const existing = db.prepare(`
         SELECT id, state, fingerprint, accepted_edition_id FROM ingest_items
         WHERE source = ? AND external_id = ?
@@ -117,6 +126,15 @@ function candidateToEditionInput(candidate) {
     title,
     organizer: candidate.organizer || null,
     description: candidate.description || null,
+    field: candidate.classification?.field,
+    field_confidence: candidate.classification?.field_confidence,
+    field_source: candidate.classification?.field_source,
+    field_reason: candidate.classification?.field_reason,
+    content_type: candidate.classification?.content_type,
+    content_confidence: candidate.classification?.content_confidence,
+    content_source: candidate.classification?.content_source,
+    content_reason: candidate.classification?.content_reason,
+    source_category: candidate.source_category || null,
     year: yearForCandidate(candidate),
     region: candidate.region,
     category: candidate.category,
@@ -180,6 +198,19 @@ function mergeCandidateIntoEdition(editionId, candidate, actor, ip) {
   };
   patch.external_ref = JSON.stringify(nextRef);
   patch.verified_at = nowIso();
+  if (edition.field_source !== "manual" && candidate.classification) {
+    patch.field = candidate.classification.field;
+    patch.field_confidence = candidate.classification.field_confidence;
+    patch.field_source = candidate.classification.field_source;
+    patch.field_reason = candidate.classification.field_reason;
+  }
+  if (edition.content_source !== "manual" && candidate.classification) {
+    patch.content_type = candidate.classification.content_type;
+    patch.content_confidence = candidate.classification.content_confidence;
+    patch.content_source = candidate.classification.content_source;
+    patch.content_reason = candidate.classification.content_reason;
+  }
+  if (!edition.source_category && candidate.source_category) patch.source_category = candidate.source_category;
   updateEdition(editionId, patch, { actor, ip });
 
   const existingStages = [...(edition.stages || [])];

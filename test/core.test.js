@@ -110,7 +110,7 @@ test("legacy competitions migrate into series/edition/stage and are idempotent",
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM event_stages").get().n, 4);
   assert.ok(db.prepare("SELECT COUNT(*) AS n FROM event_series").get().n >= 1);
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM edition_tags").get().n, 3);
-  assert.deepEqual(schema.ensureSchema(), { version: 2, migrated: 0 });
+  assert.deepEqual(schema.ensureSchema(), { version: 3, migrated: 0, classified: 0 });
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM event_editions").get().n, 2);
 });
 
@@ -124,8 +124,11 @@ test("public presentation derives status from stages", () => {
   assert.deepEqual(qwb.tags, { direction: ["Web"], format: ["AWD"] });
   assert.equal(qwb.organizer, "中国网络空间安全协会");
   assert.equal(qwb.description, "test");
+  assert.equal(qwb.field, "cyber");
+  assert.equal(qwb.content_type, "competition");
   const devpost = list.items.find((e) => e.title === "Taskforge");
   assert.ok(devpost);
+  assert.equal(devpost.field, "software");
   assert.ok(devpost.stages.some((s) => s.kind === "submission" && s.deadline_at === "2026-11-25"));
 });
 

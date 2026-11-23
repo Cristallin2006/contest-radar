@@ -7,6 +7,14 @@
     mathmodel: "数模", academic: "学科竞赛", other: "其他",
   };
   const REGION_LABELS = { cn: "国内", intl: "国际" };
+  const FIELD_ORDER = ["cyber", "software", "data", "math", "electronics", "engineering", "science", "design", "business", "language", "humanities", "sports", "other"];
+  const FIELD_LABELS = {
+    cyber: "网络安全", software: "计算机 / 软件", data: "数据 / 统计", math: "数学 / 建模",
+    electronics: "电子 / 自动化", engineering: "机械 / 工程", science: "理科 / 医学",
+    design: "设计 / 艺术", business: "商科 / 管理", language: "外语 / 翻译",
+    humanities: "人文 / 社科", sports: "体育 / 电竞", other: "其他 / 待细分",
+  };
+  const TECH_FIELDS = new Set(["cyber", "software", "data", "math", "electronics", "engineering"]);
   const STATUS_LABELS = {
     open: "报名中", closing: "即将截止", upcoming: "预告", ongoing: "进行中",
     closed: "报名已截止", ended: "已结束", unknown: "待定",
@@ -23,7 +31,7 @@
       return /^https?:$/.test(url.protocol) ? url.href : "";
     } catch { return ""; }
   };
-  const state = { region: "all", category: "all", q: "" };
+  const state = { region: "all", category: "all", field: "all", tech: false, q: "" };
   let items = [];
 
   function fmt(value) {
@@ -69,6 +77,14 @@
     return [...(item.tags?.direction || []), ...(item.tags?.format || [])].slice(0, 8);
   }
 
+  function fieldOf(item) {
+    return item.field || "other";
+  }
+
+  function fieldLabel(item) {
+    return item.field_label || FIELD_LABELS[fieldOf(item)] || "其他";
+  }
+
   function updateChips(base) {
     const regions = [["all", "全部"], ["cn", "国内"], ["intl", "国际"]];
     $("hallRegions").innerHTML = regions.map(([id, label]) => {
@@ -80,6 +96,14 @@
     $("hallCats").innerHTML = [["all", "全部"]].concat(CATEGORY_ORDER.map((id) => [id, CATEGORY_LABELS[id]])).map(([id, label]) => {
       const count = id === "all" ? base.length : counts[id] || 0;
       return `<button type="button" class="hall-cat-btn" data-category="${id}" aria-pressed="${state.category === id}">${label} ${count}</button>`;
+    }).join("");
+    const fieldBase = state.category === "all" ? base : base.filter((item) => item.category === state.category);
+    const fieldCounts = {};
+    for (const item of fieldBase) fieldCounts[fieldOf(item)] = (fieldCounts[fieldOf(item)] || 0) + 1;
+    $("hallFields").innerHTML = [["all", "全部方向"]].concat(FIELD_ORDER.map((id) => [id, FIELD_LABELS[id]])).map(([id, label]) => {
+      const count = id === "all" ? fieldBase.length : fieldCounts[id] || 0;
+      if (id !== "all" && count === 0) return "";
+      return `<button type="button" class="hall-field-btn" data-field="${id}" aria-pressed="${state.field === id}">${label} ${count}</button>`;
     }).join("");
   }
 
@@ -105,6 +129,7 @@
     return `<article class="hall-card">
       <div class="hall-card-top">
         <span class="hall-badge cat">${esc(categoryOf(item))}</span>
+        <span class="hall-badge field">${esc(fieldLabel(item))}</span>
         <span class="hall-badge">${esc(REGION_LABELS[regionOf(item)])}</span>
         <span class="hall-badge status ${esc(status)}">${esc(STATUS_LABELS[status] || status)}</span>
         ${item.date_confidence === "estimated" ? '<span class="hall-badge">预计</span>' : ""}
@@ -129,6 +154,8 @@
     const q = state.q.trim().toLowerCase();
     const filtered = base.filter((item) => {
       if (state.category !== "all" && item.category !== state.category) return false;
+      if (state.field !== "all" && fieldOf(item) !== state.field) return false;
+      if (state.tech && !TECH_FIELDS.has(fieldOf(item))) return false;
       if (!q) return true;
       return [
         item.title, item.series_name, item.organizer, item.description,
@@ -138,6 +165,7 @@
     updateChips(base);
     renderStats();
     $("hallSearch").value = state.q;
+    $("hallTech").checked = state.tech;
     $("hallCount").textContent = `${filtered.length} 条`;
     if (!filtered.length) {
       $("hallList").innerHTML = '<div class="hall-empty"><strong>没有匹配的竞赛</strong>换个关键词，或重置地区/类别筛选。</div>';
@@ -167,6 +195,8 @@
     const params = new URLSearchParams();
     if (state.region !== "all") params.set("region", state.region);
     if (state.category !== "all") params.set("cat", state.category);
+    if (state.field !== "all") params.set("field", state.field);
+    if (state.tech) params.set("tech", "1");
     if (state.q) params.set("q", state.q);
     const query = params.toString();
     history.replaceState(null, "", location.pathname + (query ? `?${query}` : ""));
@@ -188,6 +218,20 @@
       syncUrl();
       render();
     });
+    $("hallFields").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-field]");
+      if (!button) return;
+      state.field = button.dataset.field;
+      if (state.tech && state.field !== "all" && !TECH_FIELDS.has(state.field)) state.tech = false;
+      syncUrl();
+      render();
+    });
+    $("hallTech").addEventListener("change", (event) => {
+      state.tech = event.target.checked;
+      if (state.tech && state.field !== "all" && !TECH_FIELDS.has(state.field)) state.field = "all";
+      syncUrl();
+      render();
+    });
     $("hallSearch").addEventListener("input", (event) => {
       state.q = event.target.value;
       syncUrl();
@@ -196,6 +240,8 @@
     $("hallReset").addEventListener("click", () => {
       state.region = "all";
       state.category = "all";
+      state.field = "all";
+      state.tech = false;
       state.q = "";
       syncUrl();
       render();
@@ -221,6 +267,8 @@
     const params = new URLSearchParams(location.search);
     if (["all", "cn", "intl"].includes(params.get("region"))) state.region = params.get("region");
     if (params.get("cat") && CATEGORY_LABELS[params.get("cat")]) state.category = params.get("cat");
+    if (params.get("field") && FIELD_LABELS[params.get("field")]) state.field = params.get("field");
+    state.tech = params.get("tech") === "1";
     state.q = params.get("q") || "";
     bind();
     try {

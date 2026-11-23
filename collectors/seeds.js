@@ -10,6 +10,7 @@ function seed(input) {
     name,
     organizer,
     category,
+    source_category: discipline,
     region: "cn",
     discipline,
     mode: "unknown",

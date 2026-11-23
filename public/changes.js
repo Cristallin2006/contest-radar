@@ -13,6 +13,7 @@
     category: "类别", lifecycle: "生命周期", status_override: "状态覆盖", publish_state: "发布状态",
     signup_url: "报名链接", source_url: "原文链接", fee: "费用", prizes: "奖项",
     eligibility: "资格", difficulty: "难度", date_confidence: "日期置信度",
+    field: "方向", content_type: "内容类型", source_category: "来源分类",
     kind: "类型", name: "名称", starts_at: "开始", ends_at: "结束", deadline_at: "截止",
     time_status: "时间状态", is_all_day: "全天", mode: "形式", location: "地点", note: "备注", sort_order: "排序",
   };

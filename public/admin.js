@@ -2,6 +2,17 @@
   "use strict";
 
   const $ = (selector, root = document) => root.querySelector(selector);
+  const FIELD_OPTIONS = [
+    ["cyber", "网络安全 / CTF"], ["software", "计算机 / 软件 / AI"], ["data", "数据 / 统计"],
+    ["math", "数学 / 建模"], ["electronics", "电子 / 自动化"], ["engineering", "机械 / 工程"],
+    ["science", "理科 / 医学"], ["design", "设计 / 艺术"], ["business", "商科 / 管理"],
+    ["language", "外语 / 翻译"], ["humanities", "人文 / 社科"], ["sports", "体育 / 电竞"],
+    ["other", "其他 / 待细分"],
+  ];
+  const CONTENT_OPTIONS = [
+    ["competition", "竞赛"], ["volunteer", "志愿者 / 招募"], ["conference", "论坛 / 会议"],
+    ["course", "课程 / 培训 / 证书"], ["activity", "庆典 / 活动"], ["other", "其他"],
+  ];
   const state = {
     token: sessionStorage.getItem("cr.admin.token") || "",
     tab: "overview",
@@ -315,7 +326,7 @@
     }
     $("#editionRows").innerHTML = state.editions.map((e) => `<tr>
       <td>${e.id}</td>
-      <td class="title-cell">${esc(e.title)}<small>${esc(e.series_name || "一次性赛事")}</small></td>
+      <td class="title-cell">${esc(e.title)}<small>${esc(e.series_name || "一次性赛事")}${e.field_label ? ` · ${esc(e.field_label)}` : ""}</small></td>
       <td>${esc(e.region_label)} / ${esc(e.category_label)}</td>
       <td><span class="pill ${["open", "closing"].includes(e.status) ? "good" : ""}">${esc(e.status_label)}</span></td>
       <td>${esc(e.publish_state)}</td>
@@ -433,6 +444,8 @@
             ["ctf", "CTF"], ["hackathon", "黑客松"], ["datamodel", "数据竞赛"],
             ["mathmodel", "数学建模"], ["academic", "学科竞赛"], ["other", "其他"],
           ])}
+          ${select("方向", "field", e.field || "other", FIELD_OPTIONS)}
+          ${select("内容类型", "content_type", e.content_type || "competition", CONTENT_OPTIONS)}
           ${select("生命周期", "lifecycle", e.lifecycle || "normal", [
             ["normal", "正常"], ["postponed", "延期"], ["cancelled", "取消"], ["finished", "结束"],
           ])}
@@ -500,6 +513,8 @@
       year: readField(form, "year") ? Number(readField(form, "year")) : null,
       region: readField(form, "region"),
       category: readField(form, "category"),
+      field: readField(form, "field"),
+      content_type: readField(form, "content_type"),
       lifecycle: readField(form, "lifecycle"),
       publish_state: readField(form, "publish_state"),
       date_confidence: readField(form, "date_confidence"),

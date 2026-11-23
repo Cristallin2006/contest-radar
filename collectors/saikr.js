@@ -16,7 +16,7 @@ function categoryOf(item) {
   const name = String(item.contest_name || "");
   const cls = String(item.contest_class_second || "");
   if (cls === "mcm" || /数学建模|统计建模/.test(name)) return "mathmodel";
-  if (cls === "big_data" || /大数据|数据科学|数据分析|数据挖掘/.test(name)) return "datamodel";
+  if (cls === "big_data" && /大数据|数据科学|数据分析|数据挖掘|数据统计/.test(name)) return "datamodel";
   if (/黑客松|hackathon/i.test(name)) return "hackathon";
   return "academic";
 }
@@ -67,6 +67,7 @@ export async function collect() {
         name: candidateName,
         organizer,
         category: categoryOf(item),
+        source_category: item.contest_class_second || null,
         region: "cn",
         discipline: clean([item.level_name, item.enter_range].filter(Boolean).join(" / "), 100) || "学科竞赛",
         mode: "unknown",
