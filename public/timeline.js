@@ -34,6 +34,7 @@
 
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Shanghai" });
   const rangeStart = new Date(`${today}T00:00:00+08:00`).getTime() - 3 * DAY;
+  const TODAY_DAY = Math.round((new Date(`${today}T00:00:00+08:00`).getTime() - rangeStart) / DAY);
 
   const state = {
     region: "cn",
@@ -244,7 +245,8 @@
     const ticks = daily.map((count, day) => {
       const major = day % 3 === 0;
       const mobile = day % 6 === 0;
-      return `<button type="button" class="date-tick${major ? " major" : ""}${mobile ? " mobile-tick" : ""}${day === RANGE_DAYS - 1 ? " last-tick" : ""}" style="--day-x:${position(day)}" data-day="${day}" aria-label="${formatDate(day)}，${count} 个赛程节点" aria-pressed="false">${major ? `<span>${formatDate(day)}</span>` : ""}</button>`;
+      const isToday = day === TODAY_DAY;
+      return `<button type="button" class="date-tick${major ? " major" : ""}${mobile ? " mobile-tick" : ""}${isToday ? " is-today" : ""}${day === RANGE_DAYS - 1 ? " last-tick" : ""}" style="--day-x:${position(day)}" data-day="${day}" aria-label="${formatDate(day)}${isToday ? "（今天）" : ""}，${count} 个赛程节点" aria-pressed="false">${major || isToday ? `<span>${formatDate(day)}${isToday ? '<em class="tick-today">今</em>' : ""}</span>` : ""}</button>`;
     }).join("");
 
     let prior = -3;
@@ -325,7 +327,7 @@
     $("next").disabled = day === RANGE_DAYS - 1;
     const dayHeading = $("day-heading");
     const dayItems = $("day-items");
-    dayHeading.innerHTML = `<time datetime="${shanghaiDate(rangeStart + day * DAY)}">${formatDate(day)}</time><p><strong>${weekday(day)}</strong>${list.length} 个赛程节点</p>`;
+    dayHeading.innerHTML = `<time datetime="${shanghaiDate(rangeStart + day * DAY)}">${formatDate(day)}${day === TODAY_DAY ? '<em class="today-badge">今天</em>' : ""}</time><p><strong>${weekday(day)}</strong>${list.length} 个赛程节点</p>`;
     dayItems.innerHTML = list.map(({ event, stage }) => `<li><button type="button" data-event="${esc(event.id)}" data-stage="${stage.bucket}" aria-pressed="false">${icon(SYMBOLS[stage.bucket])}<span class="day-item-name">${esc(event.title)}</span><time class="day-item-time">${esc(stage.time)}</time><span class="day-item-meta">${esc(stage.label)} · ${stage.estimated ? "预计" : "官方"}</span></button></li>`).join("");
     dayItems.hidden = list.length === 0;
     $("day-empty").hidden = list.length !== 0;
@@ -365,6 +367,8 @@
       button.setAttribute("aria-pressed", String(button.dataset.category === state.category));
     });
     $("range-label").textContent = `${formatDate(0)} — ${formatDate(RANGE_DAYS - 1)}`;
+    $("today-note").textContent = `今天 ${today.slice(5).replace("-", ".")}`;
+    $("map").style.setProperty("--today-day", TODAY_DAY);
     $("result-count").textContent = `${REGION_LABELS[state.region]} · ${state.visible.length}${state.visible.length < state.total ? ` / ${state.total}` : ""} 场${state.savedOnly ? "收藏赛事" : "赛事"}`;
     updateBookmarkButtons();
     renderAxis(state.visible);
@@ -407,6 +411,7 @@
         resetView(false);
       });
     }
+    $("today-jump").addEventListener("click", () => setDay(TODAY_DAY, null));
     $("previous").addEventListener("click", () => setDay(state.day - 1, state.stageKey));
     $("next").addEventListener("click", () => setDay(state.day + 1, state.stageKey));
     $("load-more").addEventListener("click", () => {

@@ -7,7 +7,7 @@
 <meta name="description" content="竞赛雷达赛事线路图：按报名截止、初赛和决赛日期查看国内与国外竞赛，支持筛选、搜索和本地收藏。">
 <title>赛事线路图 · 竞赛雷达</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/timeline.css?v=20261123c">
+<link rel="stylesheet" href="/timeline.css?v=20261123d">
 </head>
 <body>
 <!-- Icons: Phosphor Icons (MIT, Copyright (c) 2023 Phosphor Icons); full notice in THIRD_PARTY_NOTICES.md. -->
@@ -28,7 +28,7 @@
   <header class="mast">
     <a class="identity" href="/" aria-label="返回竞赛雷达首页"><svg class="icon" aria-hidden="true"><use href="#icon-brand"/></svg>竞赛雷达</a>
     <h1>赛事线路图</h1>
-    <div class="mast-meta"><p class="mast-dates"><svg class="icon" aria-hidden="true"><use href="#icon-calendar"/></svg><span id="range-label">正在加载</span><span class="sr-only">北京时间</span></p><p class="mast-note">公开赛历 · 北京时间</p></div>
+    <div class="mast-meta"><p class="mast-dates"><svg class="icon" aria-hidden="true"><use href="#icon-calendar"/></svg><span id="range-label">正在加载</span><span class="sr-only">北京时间</span></p><p class="mast-note">公开赛历 · 北京时间 · <span id="today-note" class="today-note"></span></p></div>
     <div class="mast-actions"><button type="button" id="saved-toggle-top" class="saved-toggle" aria-pressed="false"><svg class="icon" aria-hidden="true"><use href="#icon-bookmark"/></svg>我的赛程<span class="saved-count" id="saved-count-top" hidden>0</span></button></div>
   </header>
   <div class="sheet">
@@ -47,18 +47,18 @@
       </div>
       <div class="legend"><strong id="result-count" aria-live="polite">正在加载…</strong><div class="legend-items" aria-label="阶段图例"><span><svg class="icon" aria-hidden="true"><use href="#icon-deadline"/></svg>报名截止</span><span><svg class="icon" aria-hidden="true"><use href="#icon-qualifying"/></svg>初赛/比赛</span><span><svg class="icon" aria-hidden="true"><use href="#icon-final"/></svg>决赛</span><span><i class="dash" aria-hidden="true"></i>预计/暂定</span></div></div>
       <div class="map" id="map" aria-label="按日期排列的赛事阶段" role="group" style="--days:21">
-        <span class="map-namehead">赛事 / 日期</span><div class="date-axis" id="date-axis"></div><div class="cursor-track" aria-hidden="true"><div class="date-cursor" id="date-cursor"></div></div><div class="tracks" id="tracks"><div class="timeline-loading">正在加载赛事…</div></div>
+        <span class="map-namehead">赛事 / 日期</span><div class="date-axis" id="date-axis"></div><div class="cursor-track" aria-hidden="true"><div class="date-cursor" id="date-cursor"></div></div><div class="today-track" aria-hidden="true"><span class="today-line" id="today-line"></span></div><div class="tracks" id="tracks"><div class="timeline-loading">正在加载赛事…</div></div>
       </div>
       <div id="mobile-list" class="mobile-list" aria-label="赛事列表"></div>
       <p class="map-caption"><span id="map-caption-text">日历轴上的数字表示同一天有多个赛程节点。</span><button type="button" id="load-more" hidden>显示更多</button></p>
     </section>
     <aside class="day-sheet" aria-labelledby="day-label">
-      <div class="day-top"><h2 id="day-label">当天日程</h2><div class="day-nav" role="group" aria-label="逐日浏览"><button type="button" id="previous" aria-label="前一天"><svg class="icon" aria-hidden="true"><use href="#icon-left"/></svg></button><button type="button" id="next" aria-label="后一天"><svg class="icon" aria-hidden="true"><use href="#icon-right"/></svg></button></div></div>
+      <div class="day-top"><h2 id="day-label">当天日程</h2><div class="day-nav" role="group" aria-label="逐日浏览"><button type="button" id="today-jump" aria-label="回到今天">今天</button><button type="button" id="previous" aria-label="前一天"><svg class="icon" aria-hidden="true"><use href="#icon-left"/></svg></button><button type="button" id="next" aria-label="后一天"><svg class="icon" aria-hidden="true"><use href="#icon-right"/></svg></button></div></div>
       <div id="day-content"><div class="day-heading" id="day-heading" aria-live="polite"></div><ul class="day-items" id="day-items"></ul><p class="day-empty" id="day-empty" hidden>当天没有符合当前筛选的赛程。</p><section class="detail" id="detail" aria-label="赛事阶段" hidden><div class="detail-head"><h3 id="detail-title"></h3><button id="bookmark" type="button" class="bookmark" aria-pressed="false" aria-label="收藏赛事"></button></div><ol class="steps" id="steps"></ol><p class="detail-note" id="detail-note"></p><p class="detail-links" id="detail-links"></p></section></div>
     </aside>
   </div>
-  <footer class="map-caption" style="margin-top:14px"><span>数据来自各公开来源，日期以主办方官网为准。</span><span><a href="/hall" style="color:var(--green)">竞赛馆</a> · <a href="/submit" style="color:var(--green)">投稿</a> · <a href="/list" style="color:var(--green)">卡片列表</a> · <a href="/changes" style="color:var(--green)">公开变更</a> · <a href="/api/v1/ical/all.ics" style="color:var(--green)">ICS 订阅</a></span></footer>
+  <footer class="map-caption" style="margin-top:14px"><span>数据来自公开来源；时间、地区、赛制可能不准确，请以主办方官网为准并自行核实。</span><span><a href="/hall" style="color:var(--green)">竞赛馆</a> · <a href="/list" style="color:var(--green)">卡片列表</a> · <a href="/docs.html" style="color:var(--green)">文档 / API</a> · <a href="/changes" style="color:var(--green)">公开变更</a> · <a href="/api/v1/ical/all.ics" style="color:var(--green)">ICS 订阅</a></span></footer>
 </main>
-<script src="/timeline.js?v=20261123c" defer></script>
+<script src="/timeline.js?v=20261123d" defer></script>
 </body>
 </html>

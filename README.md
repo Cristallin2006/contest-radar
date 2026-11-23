@@ -38,6 +38,8 @@
 ## 文档
 
 - [方向分类与内容类型审计](docs/classification-audit.md)
+- [公开 API v1](docs/api.md)
+- [数据与时间免责声明](docs/disclaimer.md)
 - [GitHub 登录与投稿实现](docs/auth-submissions.md)
 - [匿名版需求文档](docs/requirements-v0.2-anon.md)
 - [匿名版架构设计](docs/architecture-v0.2-anon.md)

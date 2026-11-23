@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="description" content="竞赛雷达数据免责声明与公开 API v1 文档。时间、地区、赛制等信息可能存在缺失或误差，请以主办方官网为准。">
+<title>文档与 API · 竞赛雷达</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/docs.css?v=20261123a">
+</head>
+<body>
+<header class="doc-top">
+  <a class="doc-brand" href="/"><span class="mark" aria-hidden="true"></span>竞赛雷达</a>
+  <nav class="doc-nav" aria-label="站点导航">
+    <a href="/hall">竞赛馆</a>
+    <a href="/">赛事线路图</a>
+    <a href="/list">卡片列表</a>
+    <a class="active" href="/docs.html" aria-current="page">文档 / API</a>
+    <a href="/changes">公开变更</a>
+  </nav>
+</header>
+<main class="doc-shell">
+  <section class="doc-hero">
+    <p class="eyebrow">DOCUMENTATION / DATA NOTICE / API V1</p>
+    <h1>文档</h1>
+    <p class="lede">数据口径、免责声明和公开 API。先看说明，再使用数据。</p>
+  </section>
+
+  <aside class="doc-warning">
+    <strong>时间、地区、赛制、费用等信息不保证准确或实时。</strong>
+    <p>本站是公开信息聚合工具，不是主办方，也不是报名平台。部分日期为预计/暂定，部分赛事存在线上/线下、分赛区、跨时区等复杂情况。请务必以主办方官网和报名系统为准，并自行判断核实。</p>
+  </aside>
+
+  <div class="doc-layout">
+    <aside class="doc-toc" aria-label="页面目录">
+      <a href="#data">数据口径</a>
+      <a href="#refresh">更新与审核</a>
+      <a href="#api">API v1</a>
+      <a href="#params">查询参数</a>
+      <a href="#examples">请求示例</a>
+      <a href="#ics">ICS 日历</a>
+      <a href="#errors">错误与限制</a>
+      <a href="#admin">管理接口</a>
+      <a href="#corrections">纠错</a>
+    </aside>
+    <article class="doc-body">
+      <section id="data">
+        <h2>数据口径</h2>
+        <ul>
+          <li>赛事名称、主办方、类别、方向、地区、时间、费用、资格等来自公开来源或人工整理。</li>
+          <li>“预计”“暂定”“待定”表示时间尚未最终确认；不能当作官方日期。</li>
+          <li>国内/国际只是聚合标签，不代表参赛资格或赛事归属的官方定义。</li>
+          <li>时间默认使用北京时间（Asia/Shanghai）；跨时区赛事可能产生日期差异。</li>
+          <li>ICS 提醒只作辅助，不能替代主办方通知。</li>
+          <li>公开列表只展示正式竞赛；志愿者招募、活动、课程等会被过滤或隐藏。</li>
+        </ul>
+        <p class="doc-link">完整说明：<a href="https://github.com/Cristallin2006/contest-radar/blob/main/docs/disclaimer.md" target="_blank" rel="noreferrer">数据与时间免责声明</a></p>
+      </section>
+
+      <section id="refresh">
+        <h2>更新与审核</h2>
+        <p>采集器定期抓取公开来源，新内容默认进入待审核区，审核后才会公开。公开记录会显示来源和最后核实时间；没有核实时间不代表内容已过期，也不代表内容正确。</p>
+        <p>分类（类别 / 方向 / 内容类型）为辅助信息，可能存在误判，管理员可手动修正。</p>
+      </section>
+
+      <section id="api">
+        <h2>公开 API v1</h2>
+        <p>Base URL：<code>https://contest.07212006.xyz/api/v1</code></p>
+        <p>公开接口只读，不需要登录；只返回已发布且 <code>content_type=competition</code> 的赛事。</p>
+        <div class="doc-table-wrap">
+          <table>
+            <thead><tr><th>方法</th><th>路径</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>GET</td><td><code>/editions</code></td><td>赛事列表，支持筛选、搜索、分页</td></tr>
+              <tr><td>GET</td><td><code>/editions/:id</code></td><td>单个赛事详情（含阶段、标签、来源）</td></tr>
+              <tr><td>GET</td><td><code>/taxonomy</code></td><td>类别、方向、内容类型、阶段等字典</td></tr>
+              <tr><td>GET</td><td><code>/stats</code></td><td>公开赛事统计</td></tr>
+              <tr><td>GET</td><td><code>/changes</code></td><td>公开变更记录</td></tr>
+              <tr><td>GET</td><td><code>/health</code></td><td>健康检查与 schema 版本</td></tr>
+              <tr><td>GET</td><td><code>/ical/all.ics</code></td><td>全部公开赛事的 ICS</td></tr>
+              <tr><td>GET</td><td><code>/ical/region/:region.ics</code></td><td><code>cn</code> / <code>intl</code></td></tr>
+              <tr><td>GET</td><td><code>/ical/category/:category.ics</code></td><td>按类别导出</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="params">
+        <h2>列表查询参数</h2>
+        <div class="doc-table-wrap">
+          <table>
+            <thead><tr><th>参数</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td><code>region</code></td><td><code>cn</code> / <code>intl</code></td></tr>
+              <tr><td><code>category</code></td><td><code>ctf</code> / <code>hackathon</code> / <code>datamodel</code> / <code>mathmodel</code> / <code>academic</code> / <code>other</code></td></tr>
+              <tr><td><code>field</code></td><td>方向，可逗号分隔，如 <code>software,electronics</code></td></tr>
+              <tr><td><code>tech=1</code></td><td>只看技术向（网络安全 / 计算机 / 数据 / 数学 / 电子 / 工程）</td></tr>
+              <tr><td><code>status</code></td><td><code>open</code> / <code>closing</code> / <code>upcoming</code> / <code>ongoing</code> / <code>closed</code> / <code>ended</code> / <code>unknown</code> / <code>cancelled</code> / <code>postponed</code></td></tr>
+              <tr><td><code>q</code></td><td>搜索标题 / 系列 / 主办方</td></tr>
+              <tr><td><code>from</code>, <code>to</code></td><td><code>YYYY-MM-DD</code> 日期范围</td></tr>
+              <tr><td><code>include_unknown=1</code></td><td>包含日期未知的赛事</td></tr>
+              <tr><td><code>all_dates=1</code></td><td>不限制默认约 90 天窗口</td></tr>
+              <tr><td><code>sort</code></td><td>如 <code>deadline</code> / <code>updated</code></td></tr>
+              <tr><td><code>page</code></td><td>页码，默认 1</td></tr>
+              <tr><td><code>size</code></td><td>每页数量，默认 20，最大 100</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="examples">
+        <h2>请求示例</h2>
+        <pre><code># 国内数学建模
+curl 'https://contest.07212006.xyz/api/v1/editions?region=cn&amp;category=mathmodel&amp;all_dates=1&amp;size=5'
+
+# 只看技术向
+curl 'https://contest.07212006.xyz/api/v1/editions?tech=1&amp;all_dates=1&amp;size=10'
+
+# 单个赛事
+curl 'https://contest.07212006.xyz/api/v1/editions/232'</code></pre>
+        <p>列表响应包含 <code>items</code>、<code>page</code>、<code>size</code>、<code>total</code>、<code>pages</code> 和 <code>stats</code>。分页时逐页请求。</p>
+      </section>
+
+      <section id="ics">
+        <h2>ICS 日历</h2>
+        <p>阶段级 UID 稳定；只有确认的截止时间才带精确 <code>VALARM</code>。预计/待定日期不会生成精确提醒，默认时区为 Asia/Shanghai。</p>
+        <p>订阅入口：<a href="/api/v1/ical/all.ics">全部赛事 ICS</a>。也可以使用分类或地区路径。</p>
+      </section>
+
+      <section id="errors">
+        <h2>错误与使用限制</h2>
+        <p>错误格式：<code>{"code":"EDITION_NOT_FOUND","message":"赛事不存在或未发布"}</code></p>
+        <ul>
+          <li>公开 JSON 默认缓存 60 秒，分类字典 1 小时，ICS 15 分钟。</li>
+          <li>支持 <code>If-None-Match</code> / <code>304</code>，请优先利用缓存。</li>
+          <li>请勿高频轮询；公开 API 不是官方报名数据源。</li>
+          <li>接口可能变更，变更会尽量记录在公开变更页。</li>
+        </ul>
+      </section>
+
+      <section id="admin">
+        <h2>管理接口</h2>
+        <p>管理写接口位于 <code>/api/v1/admin/*</code>，需要独立的 <code>X-Admin-Token</code>。管理员令牌不公开，也不在本文档中给出。</p>
+      </section>
+
+      <section id="corrections">
+        <h2>纠错与反馈</h2>
+        <p>发现日期、地区、主办方、分类或链接错误，请附上主办方官方链接提交 Issue。涉及公开留言/用户投稿的能力会在后续阶段单独上线。</p>
+        <p><a href="https://github.com/Cristallin2006/contest-radar/issues" target="_blank" rel="noreferrer">提交 Issue</a></p>
+      </section>
+    </article>
+  </div>
+
+  <footer class="doc-footer">
+    <span>竞赛雷达 · 数据聚合工具，非赛事主办方；信息请自行核实。</span>
+    <span><a href="/hall">竞赛馆</a> · <a href="/">线路图</a> · <a href="https://github.com/Cristallin2006/contest-radar" target="_blank" rel="noreferrer">GitHub</a></span>
+  </footer>
+</main>
+</body>
+</html>

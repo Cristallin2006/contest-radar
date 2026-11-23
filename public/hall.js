@@ -32,7 +32,7 @@
       return /^https?:$/.test(url.protocol) ? url.href : "";
     } catch { return ""; }
   };
-  const state = { region: "all", category: "all", field: "all", tech: false, q: "", openId: null };
+  const state = { region: "all", category: "all", field: "all", tech: false, q: "", openId: null, expanded: new Set() };
   let items = [];
   let detailRequest = 0;
 
@@ -110,15 +110,17 @@
   }
 
   function renderStats() {
-    const series = new Set(items.map((item) => item.series_name).filter(Boolean));
-    const categories = new Set(items.map((item) => item.category));
-    const sources = new Set(items.map((item) => item.source));
-    const dated = items.filter((item) => item.next_deadline || item.next_start || item.event_start).length;
+    const open = items.filter((item) => item.status === "open").length;
+    const closing = items.filter((item) => item.status === "closing").length;
+    const thisWeek = items.filter((item) => {
+      const n = daysLeft(item.next_start || item.event_start);
+      return n != null && n >= 0 && n <= 7;
+    }).length;
     $("hallStats").innerHTML = [
       [items.length, "已收录届次"],
-      [series.size, "赛事系列"],
-      [categories.size, "覆盖类别"],
-      [`${dated}`, `有日期 · ${sources.size} 个来源`],
+      [open, "正在报名"],
+      [closing, "即将截止"],
+      [thisWeek, "7 天内开赛"],
     ].map(([value, label]) => `<div class="hall-stat"><b>${esc(value)}</b><span>${esc(label)}</span></div>`).join("");
   }
 
@@ -186,9 +188,14 @@
         const bd = b.next_deadline || b.next_start || b.event_start || "9999";
         return String(ad).localeCompare(String(bd)) || String(a.title).localeCompare(String(b.title), "zh-CN");
       });
+      const expandAll = Boolean(state.q.trim()) || state.field !== "all" || state.tech || state.category !== "all";
+      const expanded = expandAll || state.expanded.has(key);
+      const visibleRows = expanded ? rows : rows.slice(0, 6);
+      const hidden = rows.length - visibleRows.length;
       return `<section class="hall-section">
         <div class="hall-section-head"><h2>${esc(CATEGORY_LABELS[key] || key)}</h2><span>${rows.length} 条</span></div>
-        <div class="hall-grid">${rows.map(eventCard).join("")}</div>
+        <div class="hall-grid">${visibleRows.map(eventCard).join("")}</div>
+        ${hidden > 0 ? `<button type="button" class="hall-more" data-expand="${esc(key)}">展开该类别其余 ${hidden} 条</button>` : ""}
       </section>`;
     }).join("");
   }
@@ -337,6 +344,12 @@
       render();
     });
     $("hallList").addEventListener("click", (event) => {
+      const expand = event.target.closest("[data-expand]");
+      if (expand) {
+        state.expanded.add(expand.dataset.expand);
+        render();
+        return;
+      }
       const link = event.target.closest("[data-detail]");
       if (!link) return;
       event.preventDefault();
@@ -358,6 +371,7 @@
       state.field = "all";
       state.tech = false;
       state.q = "";
+      state.expanded.clear();
       syncUrl();
       render();
     });

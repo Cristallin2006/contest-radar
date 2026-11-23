@@ -164,3 +164,5 @@ body.detail-open { overflow: hidden; }
   .hall-detail-grid { grid-template-columns: 1fr; }
   .hall-stage-row { grid-template-columns: 72px minmax(0, 1fr); }
 }
+.hall-more { display:block; width:100%; margin-top:8px; border:1px dashed var(--strong); background:#fbf9f1; color:var(--green); padding:7px; border-radius:3px; font-size:11px; }
+.hall-more:hover { background:#eef2e8; border-color:#8fa495; }
