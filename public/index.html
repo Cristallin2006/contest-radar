@@ -16,7 +16,7 @@
   <title>竞赛雷达 · Contest Radar</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="alternate" type="text/calendar" title="竞赛雷达 ICS" href="/api/v1/ical/all.ics" />
-  <link rel="stylesheet" href="/style.css?v=20261123f" />
+  <link rel="stylesheet" href="/style.css?v=20261123g" />
 </head>
 <body>
   <header class="topbar">
@@ -33,6 +33,7 @@
       <button class="view-btn active" data-view="list" type="button">列表</button>
       <button class="view-btn" data-view="calendar" type="button">日历</button>
       <a class="view-btn timeline-link" href="/timeline">线路图</a>
+      <a class="view-btn hall-link" href="/hall">竞赛馆</a>
       <button class="view-btn" data-view="favorites" type="button">我的赛程 <b id="favCount" class="nav-count hidden">0</b></button>
       <a class="ics-btn" href="/api/v1/ical/all.ics" title="订阅或导入日历">ICS 订阅</a>
     </nav>
@@ -169,7 +170,7 @@
 
     <footer class="footer">
       <span>竞赛雷达 · 数据来自 CTFtime / 攻防世界 / CTFHub / 好靶场 / Devpost / 我爱竞赛网 / 赛氪 / 高校学生竞赛网 / DrivenData / COMAP 及人工种子</span>
-      <span><a href="/timeline">线路图</a> · <a href="/changes">公开变更</a> · 日期以各赛事官网为准 · 仅做聚合与提醒</span>
+      <span><a href="/timeline">线路图</a> · <a href="/hall">竞赛馆</a> · <a href="/changes">公开变更</a> · 日期以各赛事官网为准 · 仅做聚合与提醒</span>
     </footer>
   </main>
 
@@ -180,6 +181,6 @@
     </div>
   </div>
 
-  <script src="/app.js?v=20261123f" defer></script>
+  <script src="/app.js?v=20261123g" defer></script>
 </body>
 </html>

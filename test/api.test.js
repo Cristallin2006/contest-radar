@@ -209,3 +209,15 @@ test("timeline preview route is publicly reachable", async () => {
   assert.equal(response.status, 200);
   assert.match(await response.text(), /赛事线路图/);
 });
+
+test("default route, card list, and competition hall are routed correctly", async () => {
+  const root = await fetch(`${BASE}/`);
+  assert.equal(root.status, 200);
+  assert.match(await root.text(), /赛事线路图/);
+  const list = await fetch(`${BASE}/list`);
+  assert.equal(list.status, 200);
+  assert.match(await list.text(), /竞赛雷达 · Contest Radar/);
+  const hall = await fetch(`${BASE}/hall`);
+  assert.equal(hall.status, 200);
+  assert.match(await hall.text(), /竞赛馆/);
+});
