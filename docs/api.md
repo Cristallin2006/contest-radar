@@ -129,7 +129,7 @@ GET /api/v1/health
 ```json
 {
   "ok": true,
-  "schema_version": 3,
+  "schema_version": 4,
   "editions": 230,
   "pending_ingest": 0,
   "last_refresh": "2026-11-23T11:18:00.228Z",
