@@ -33,15 +33,15 @@
   };
 
   let today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Shanghai" });
-  let rangeStart = new Date(`${today}T00:00:00+08:00`).getTime() - 3 * DAY;
-  const TODAY_DAY = 3;
+  let rangeStart = new Date(`${today}T00:00:00+08:00`).getTime();
+  const TODAY_DAY = 0;
 
   const state = {
     region: "cn",
     category: "全部",
     query: "",
     savedOnly: false,
-    day: 3,
+    day: 0,
     stageKey: null,
     limit: DEFAULT_LIMIT,
     visible: [],
@@ -384,7 +384,7 @@
   function resetView(resetLimit = true) {
     if (resetLimit) state.limit = DEFAULT_LIMIT;
     state.stageKey = null;
-    state.day = 3;
+    state.day = 0;
     renderView();
   }
 
@@ -484,7 +484,7 @@
     const next = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Shanghai" });
     if (next === today) return false;
     today = next;
-    rangeStart = new Date(`${today}T00:00:00+08:00`).getTime() - 3 * DAY;
+    rangeStart = new Date(`${today}T00:00:00+08:00`).getTime();
     state.day = TODAY_DAY;
     return true;
   }
