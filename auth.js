@@ -219,7 +219,8 @@ async function callbackGitHub(req, res, url) {
     if (!user || user.status !== "active") return redirect(res, "/submit?auth=blocked");
     createSession(req, res, user.id);
     return redirect(res, returnTo);
-  } catch {
+  } catch (err) {
+    console.error("[auth] GitHub callback failed:", String(err?.message || err));
     return redirect(res, "/submit?auth=error");
   }
 }
