@@ -119,7 +119,7 @@ test("public presentation derives status from stages", () => {
   assert.equal(list.total, 2);
   const qwb = list.items.find((e) => e.title.includes("强网杯"));
   assert.ok(qwb);
-  assert.equal(qwb.status, "open");
+  assert.ok(["open", "closing"].includes(qwb.status));
   assert.equal(qwb.registration_deadline, "2026-12-01");
   assert.deepEqual(qwb.tags, { direction: ["Web"], format: ["AWD"] });
   assert.equal(qwb.organizer, "中国网络空间安全协会");

@@ -249,7 +249,15 @@ test("sitemap, robots, and changes page are publicly reachable", async () => {
   assert.equal(sitemap.status, 200);
   const xml = await sitemap.text();
   assert.match(xml, /<urlset/);
-  assert.match(xml, /\/\?open=/);
+  assert.match(xml, /\/competition\/1/);
+  assert.doesNotMatch(xml, /\/\?open=/);
+  const detail = await fetch(`${BASE}/competition/1`);
+  assert.equal(detail.status, 200);
+  const html = await detail.text();
+  assert.match(html, /<link rel="canonical" href="https?:\/\/[^"]+\/competition\/1">/);
+  assert.match(html, /application\/ld\+json/);
+  const missing = await fetch(`${BASE}/competition/999999`);
+  assert.equal(missing.status, 404);
   const robots = await fetch(`${BASE}/robots.txt`);
   assert.equal(robots.status, 200);
   assert.match(await robots.text(), /Disallow: \/admin/);

@@ -25,7 +25,8 @@ import * as gxxsjs from "./collectors/gxxsjs.js";
 import { statusOf, daysLeftOf, escIcs, isoNow } from "./util.js";
 import { ctfDisplayName } from "./collectors/ctf.js";
 import { ensureSchema, getMeta, setMeta } from "./schema.js";
-import { allPublishedForCalendar } from "./events.js";
+import { allPublishedForCalendar, getEdition } from "./events.js";
+import { renderCompetitionPage, renderNotFound } from "./seo.js";
 import { stageCandidates } from "./ingest.js";
 import { handlePublicApi } from "./public-api.js";
 import { handleAuth } from "./auth.js";
@@ -216,7 +217,7 @@ function sitemap(req) {
     `<url><loc>${xmlEscape(base)}/miit</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>`,
   ];
   for (const item of allPublishedForCalendar()) {
-    rows.push(`<url><loc>${xmlEscape(base)}/?open=${item.id}</loc><lastmod>${xmlEscape(String(item.updated_at || "").slice(0, 10))}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
+    rows.push(`<url><loc>${xmlEscape(base)}/competition/${item.id}</loc><lastmod>${xmlEscape(String(item.updated_at || "").slice(0, 10))}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`);
   }
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${rows.join("\n")}\n</urlset>\n`;
 }
@@ -388,11 +389,11 @@ const server = http.createServer(async (req, res) => {
     if (pathname === "/robots.txt") {
       res.writeHead(200, { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" });
       res.end(`User-agent: *\nAllow: /\nDisallow: /admin
-Disallow: /submit\nSitemap: ${baseUrlOf(req)}/sitemap.xml\n`);
+Disallow: /submit\nSitemap: ${baseUrlOf(req)}/sitemap.xml\nSitemap: ${baseUrlOf(req)}/sitemap-competitions.xml\n`);
       return;
     }
-    if (pathname === "/sitemap.xml") {
-      res.writeHead(200, { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" });
+    if (pathname === "/sitemap.xml" || pathname === "/sitemap-competitions.xml") {
+      res.writeHead(200, { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=300" });
       res.end(sitemap(req));
       return;
     }
@@ -439,6 +440,23 @@ Disallow: /submit\nSitemap: ${baseUrlOf(req)}/sitemap.xml\n`);
         "cache-control": "no-cache",
       });
       res.end(body);
+      return;
+    }
+    const competitionRoute = pathname.match(/^\/competition\/(\d+)(?:-[^/]*)?$/);
+    if (competitionRoute) {
+      const item = getEdition(Number(competitionRoute[1]), { admin: false });
+      if (!item) {
+        res.writeHead(404, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
+        res.end(renderNotFound(baseUrlOf(req)));
+        return;
+      }
+      res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=300" });
+      res.end(renderCompetitionPage(item, baseUrlOf(req)));
+      return;
+    }
+    if (pathname.startsWith("/competition/")) {
+      res.writeHead(404, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
+      res.end(renderNotFound(baseUrlOf(req)));
       return;
     }
     if (pathname.startsWith("/api/")) return json(res, 404, { error: "not found" });

@@ -139,7 +139,7 @@
         ${item.recognition_label ? `<a class="hall-badge recognition" href="/miit" title="${esc(item.recognition_note || "工信部关系说明")}">${esc(item.recognition_label)}</a>` : ""}
         ${item.date_confidence === "estimated" ? '<span class="hall-badge">预计</span>' : ""}
       </div>
-      <h3><a href="/hall?open=${encodeURIComponent(item.id)}" data-detail="${esc(item.id)}">${esc(item.title)}</a></h3>
+      <h3><a href="/competition/${encodeURIComponent(item.id)}" data-detail="${esc(item.id)}">${esc(item.title)}</a></h3>
       <p class="hall-series">${esc(item.series_name || "一次性赛事")}${item.organizer ? ` · ${esc(item.organizer)}` : ""}</p>
       <p class="hall-desc">${esc(item.description || "暂无简介，点击详情查看来源与官网。")}</p>
       <div class="hall-meta">
@@ -149,7 +149,7 @@
       ${tags.length ? `<div class="hall-tags">${tags.map((tag) => `<span class="hall-tag">${esc(tag)}</span>`).join("")}</div>` : ""}
       <div class="hall-foot">
         <span>${esc(sourceOf(item))}${item.verified_at ? ` · 核实 ${esc(String(item.verified_at).slice(0, 10))}` : ""}</span>
-        <span><a href="/hall?open=${encodeURIComponent(item.id)}" data-detail="${esc(item.id)}">详情</a>${official ? ` · <a href="${esc(official)}" target="_blank" rel="noreferrer">官网</a>` : ""}</span>
+        <span><a href="/competition/${encodeURIComponent(item.id)}" data-detail="${esc(item.id)}">详情</a>${official ? ` · <a href="${esc(official)}" target="_blank" rel="noreferrer">官网</a>` : ""}</span>
       </div>
     </article>`;
   }
@@ -267,7 +267,7 @@
       <div class="hall-detail-actions">
         ${official ? `<a href="${esc(official)}" target="_blank" rel="noreferrer">前往官网</a>` : ""}
         ${source ? `<a class="secondary" href="${esc(source)}" target="_blank" rel="noreferrer">查看来源</a>` : ""}
-        <a class="secondary" href="/hall?open=${encodeURIComponent(d.id)}">本页链接</a>
+        <a class="secondary" href="/competition/${encodeURIComponent(d.id)}">本页链接</a>
       </div>
       <p class="hall-detail-sub" style="margin-top:14px">来源：${esc(d.source_name || d.source || "未知")}${d.verified_at ? ` · 核实 ${esc(String(d.verified_at).slice(0, 10))}` : ""}</p>
     `;

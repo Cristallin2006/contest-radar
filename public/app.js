@@ -434,6 +434,7 @@ function cardHtml(item) {
       <div class="card-foot">
         <span class="src">${esc(item.source_name || item.source)}</span>
         <span>${esc(String(item.last_checked || "").slice(0, 10))}</span>
+        <a class="go" href="/competition/${encodeURIComponent(item.id)}">详情</a>
         <a class="go" href="${esc(safeUrl(item.url))}" target="_blank" rel="noreferrer">官网 →</a>
       </div>
     </div>

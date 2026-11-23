@@ -49,7 +49,7 @@
       }
       list.innerHTML = items.map((c) => {
         const info = describe(c.diff);
-        return `<a class="change-card" href="/?open=${encodeURIComponent(c.edition_id)}">
+        return `<a class="change-card" href="/competition/${encodeURIComponent(c.edition_id)}">
           <div class="top">
             <div><span class="change-kind ${esc(info.kind)}">${esc(info.text)}</span></div>
             <time class="when">${esc(fmt(c.changed_at))}</time>
