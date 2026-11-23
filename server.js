@@ -28,6 +28,7 @@ import { ensureSchema, getMeta, setMeta } from "./schema.js";
 import { allPublishedForCalendar } from "./events.js";
 import { stageCandidates } from "./ingest.js";
 import { handlePublicApi } from "./public-api.js";
+import { handleAuth } from "./auth.js";
 import { handleAdminApi } from "./admin-api.js";
 import { json } from "./http.js";
 
@@ -58,6 +59,7 @@ const SOURCE_NAMES = {
   saikr: "赛氪",
   gxxsjs: "高校学生竞赛网",
   seed: "人工种子",
+  submission: "用户投稿",
   unknown: "未知",
 };
 
@@ -292,6 +294,7 @@ function serveStatic(req, res, pathname) {
   if (rel === "/admin") rel = "/admin.html";
   if (rel === "/changes") rel = "/changes.html";
   if (rel === "/hall") rel = "/hall.html";
+  if (rel === "/submit") rel = "/submit.html";
   const file = path.normalize(path.join(PUBLIC_DIR, rel));
   if (!file.startsWith(PUBLIC_DIR)) { res.writeHead(403); res.end("forbidden"); return; }
   fs.readFile(file, (err, buf) => {
@@ -328,6 +331,7 @@ const server = http.createServer(async (req, res) => {
   const pathname = url.pathname;
 
   try {
+    if (await handleAuth(req, res, url)) return;
     if (await handlePublicApi(req, res, url, { lastRefresh, refreshing })) return;
     if (await handleAdminApi(req, res, url, {
       adminToken: ADMIN_TOKEN,
@@ -354,7 +358,8 @@ const server = http.createServer(async (req, res) => {
     }
     if (pathname === "/robots.txt") {
       res.writeHead(200, { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" });
-      res.end(`User-agent: *\nAllow: /\nDisallow: /admin\nSitemap: ${baseUrlOf(req)}/sitemap.xml\n`);
+      res.end(`User-agent: *\nAllow: /\nDisallow: /admin
+Disallow: /submit\nSitemap: ${baseUrlOf(req)}/sitemap.xml\n`);
       return;
     }
     if (pathname === "/sitemap.xml") {

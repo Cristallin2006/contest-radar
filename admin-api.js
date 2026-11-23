@@ -28,6 +28,7 @@ import {
   rejectIngest,
 } from "./ingest.js";
 import { getMeta } from "./schema.js";
+import { acceptSubmission, getSubmission, listSubmissionsForAdmin, rejectSubmission } from "./submissions.js";
 import {
   checkOrigin,
   clientIp,
@@ -51,6 +52,11 @@ function overview() {
     series: db.prepare("SELECT COUNT(*) AS n FROM event_series").get()?.n ?? 0,
     stages: db.prepare("SELECT COUNT(*) AS n FROM event_stages").get()?.n ?? 0,
     ingest: ingestStats(),
+    submissions: {
+      pending: db.prepare("SELECT COUNT(*) AS n FROM competition_submissions WHERE status = 'pending'").get()?.n ?? 0,
+      total: db.prepare("SELECT COUNT(*) AS n FROM competition_submissions").get()?.n ?? 0,
+    },
+    users: db.prepare("SELECT COUNT(*) AS n FROM users").get()?.n ?? 0,
     sources: db.prepare("SELECT * FROM sources ORDER BY id").all(),
     schema_version: Number(getMeta("schema_version", "0")),
   };
@@ -115,6 +121,28 @@ export async function handleAdminApi(req, res, url, ctx = {}) {
       });
       return true;
     }
+    if (pathname === "/api/v1/admin/submissions" && method === "GET") {
+      json(res, 200, {
+        items: listSubmissionsForAdmin(url.searchParams.get("state") || "pending", url.searchParams.get("limit") || 100),
+      });
+      return true;
+    }
+    const submissionAction = pathname.match(/^\/api\/v1\/admin\/submissions\/(\d+)\/(accept|reject)$/);
+    if (submissionAction && method === "POST") {
+      const id = Number(submissionAction[1]);
+      if (submissionAction[2] === "accept") {
+        const result = acceptSubmission(id, actor);
+        recordAudit(actor, "accept-submission", `competition_submissions:${id}`, { edition_id: result.edition.id }, ip);
+        json(res, 200, result);
+      } else {
+        const body = await readJson(req);
+        const item = rejectSubmission(id, body.reason || null, actor);
+        recordAudit(actor, "reject-submission", `competition_submissions:${id}`, { reason: body.reason || null }, ip);
+        json(res, 200, item);
+      }
+      return true;
+    }
+
     if (pathname === "/api/v1/admin/ingest" && method === "GET") {
       const sourceCounts = db.prepare(`
         SELECT source, COUNT(*) AS n FROM ingest_items WHERE state = 'pending' GROUP BY source ORDER BY n DESC

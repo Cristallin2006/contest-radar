@@ -76,7 +76,7 @@ test("public health exposes schema version", async () => {
   const { res, data } = await json("/api/v1/health");
   assert.equal(res.status, 200);
   assert.equal(data.ok, true);
-  assert.equal(data.schema_version, 3);
+  assert.equal(data.schema_version, 4);
 });
 
 let editionId;
@@ -124,6 +124,22 @@ test("public list and detail expose the new edition", async () => {
   assert.equal(detail.res.status, 200);
   assert.equal(detail.data.title, "2027 测试邀请赛");
   assert.equal(detail.data.stages.length, 2);
+});
+
+test("auth status and submission endpoints are safe by default", async () => {
+  const me = await json("/api/v1/me");
+  assert.equal(me.res.status, 200);
+  assert.equal(me.data.auth_enabled, false);
+  assert.equal(me.data.authenticated, false);
+  const submit = await fetch(`${BASE}/api/v1/submissions`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ title: "测试投稿", url: "https://example.com", description: "这是一个测试投稿描述" }),
+  });
+  assert.equal(submit.status, 401);
+  const page = await fetch(`${BASE}/submit`);
+  assert.equal(page.status, 200);
+  assert.match(await page.text(), /投稿/);
 });
 
 test("non-competition content is hidden from public queries", async () => {
@@ -179,7 +195,7 @@ test("admin overview reports the created edition", async () => {
   assert.equal(res.status, 200);
   assert.equal(data.editions.published, 1);
   assert.equal(data.stages, 2);
-  assert.equal(data.schema_version, 3);
+  assert.equal(data.schema_version, 4);
 });
 
 test("admin can manage series and tags", async () => {

@@ -3,7 +3,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV TZ=Asia/Shanghai
 COPY package.json ./
-COPY server.js db.js util.js schema.js classify.js events.js ingest.js calendar-v2.js public-api.js admin-api.js http.js ./
+COPY server.js db.js util.js schema.js classify.js events.js ingest.js calendar-v2.js public-api.js admin-api.js auth.js submissions.js http.js ./
 COPY collectors ./collectors
 COPY public ./public
 RUN mkdir -p /data

@@ -32,12 +32,13 @@
 - 竞赛方向分类：网络安全 / 计算机 / 数据 / 数学 / 电子 / 工程 / 理科 / 设计 / 商科 / 外语 / 人文 / 体育
 - 内容类型过滤：竞赛 / 志愿者 / 会议 / 课程 / 活动
 - 本地收藏、我的赛程、本地画像、匹配评分
-- 单管理员令牌，无账号/队伍/服务端履历
+- 公开浏览保持匿名；可选 GitHub 登录用于投稿，管理员令牌独立
 - SQLite 每日备份、sitemap、robots
 
 ## 文档
 
 - [方向分类与内容类型审计](docs/classification-audit.md)
+- [GitHub 登录与投稿实现](docs/auth-submissions.md)
 - [匿名版需求文档](docs/requirements-v0.2-anon.md)
 - [匿名版架构设计](docs/architecture-v0.2-anon.md)
 - [v0.1 → v0.2-anon 变更说明](docs/changes-v0.1-to-v0.2-anon.md)

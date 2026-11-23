@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex">
+<meta name="description" content="向竞赛雷达投稿未收录的竞赛。使用 GitHub 登录后提交，经管理员审核后进入竞赛馆。">
+<title>投稿 · 竞赛雷达</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/submit.css?v=20261123a">
+</head>
+<body>
+<header class="submit-top">
+  <a class="submit-brand" href="/"><span class="mark" aria-hidden="true"></span>竞赛雷达</a>
+  <nav class="submit-nav" aria-label="站点导航">
+    <a href="/hall">竞赛馆</a>
+    <a href="/">赛事线路图</a>
+    <a href="/list">卡片列表</a>
+    <a class="active" href="/submit" aria-current="page">投稿</a>
+    <a href="/changes">公开变更</a>
+  </nav>
+</header>
+<main class="submit-shell">
+  <section class="submit-hero">
+    <p class="eyebrow">CONTRIBUTE / REVIEWED BY HUMANS</p>
+    <h1>投稿</h1>
+    <p class="lede">发现竞赛馆还没收录的赛事？登录后提交名称、官网和简介。所有投稿都会进入人工审核，通过后才会公开。</p>
+  </section>
+
+  <div id="authBox" class="submit-auth" aria-live="polite">
+    <div class="submit-loading">正在读取登录状态…</div>
+  </div>
+
+  <section id="formSection" class="submit-section" hidden>
+    <div class="submit-section-head">
+      <h2>提交一个未收录竞赛</h2>
+      <span>审核通过后进入草稿，日期由管理员补充</span>
+    </div>
+    <form id="submissionForm" class="submit-form">
+      <label class="submit-field wide">
+        <span>赛事名称 <b>*</b></span>
+        <input name="title" maxlength="180" required placeholder="例如：2027 年第十届 XX 大学生竞赛">
+      </label>
+      <label class="submit-field wide">
+        <span>官网 / 报名链接 <b>*</b></span>
+        <input name="url" type="url" maxlength="500" required placeholder="https://...">
+      </label>
+      <label class="submit-field">
+        <span>类别 <b>*</b></span>
+        <select name="category" required>
+          <option value="academic">学科竞赛</option>
+          <option value="mathmodel">数学建模</option>
+          <option value="datamodel">数据竞赛</option>
+          <option value="hackathon">黑客松</option>
+          <option value="ctf">CTF</option>
+          <option value="other">其他</option>
+        </select>
+      </label>
+      <label class="submit-field">
+        <span>方向</span>
+        <select name="field">
+          <option value="">交给系统判断</option>
+          <option value="cyber">网络安全 / CTF</option>
+          <option value="software">计算机 / 软件 / AI</option>
+          <option value="data">数据 / 统计</option>
+          <option value="math">数学 / 建模</option>
+          <option value="electronics">电子 / 自动化</option>
+          <option value="engineering">机械 / 工程</option>
+          <option value="science">理科 / 医学</option>
+          <option value="design">设计 / 艺术</option>
+          <option value="business">商科 / 管理</option>
+          <option value="language">外语 / 翻译</option>
+          <option value="humanities">人文 / 社科</option>
+          <option value="sports">体育 / 电竞</option>
+          <option value="other">其他 / 综合</option>
+        </select>
+      </label>
+      <label class="submit-field">
+        <span>预计报名截止</span>
+        <input name="expected_deadline" type="date">
+      </label>
+      <label class="submit-field wide">
+        <span>简介 <b>*</b></span>
+        <textarea name="description" maxlength="4000" rows="6" required placeholder="主办方、赛制、适合谁参加、为什么值得收录…"></textarea>
+        <small>至少 10 个字。请不要粘贴报名系统里的隐私信息。</small>
+      </label>
+      <div class="submit-actions">
+        <button type="submit" class="submit-primary">提交审核</button>
+        <span id="formMessage" class="submit-message" role="status"></span>
+      </div>
+    </form>
+  </section>
+
+  <section id="mineSection" class="submit-section" hidden>
+    <div class="submit-section-head">
+      <h2>我的投稿</h2>
+      <span>仅自己可见</span>
+    </div>
+    <div id="mineList" class="submit-list"></div>
+  </section>
+
+  <footer class="submit-footer">
+    <span>登录仅保存 GitHub 公开资料（用户名、昵称、头像），不读取邮箱或仓库。投稿经审核后才会公开。</span>
+    <span><a href="/hall">返回竞赛馆</a> · <a href="/">线路图</a></span>
+  </footer>
+</main>
+<script src="/submit.js?v=20261123a" defer></script>
+</body>
+</html>

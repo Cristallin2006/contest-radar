@@ -61,6 +61,7 @@ const SOURCE_NAMES = {
   saikr: "赛氪",
   gxxsjs: "高校学生竞赛网",
   seed: "人工种子",
+  submission: "用户投稿",
   unknown: "未知",
 };
 

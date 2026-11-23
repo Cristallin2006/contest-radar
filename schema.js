@@ -2,7 +2,7 @@ import { db } from "./db.js";
 import { ctfDisplayName } from "./collectors/ctf.js";
 import { classifyEdition } from "./classify.js";
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 const NOW = () => new Date().toISOString();
 
@@ -187,6 +187,54 @@ CREATE TABLE IF NOT EXISTS admin_audit (
   created_at  TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_audit_created ON admin_audit(created_at);
+
+CREATE TABLE IF NOT EXISTS users (
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  provider          TEXT NOT NULL,
+  provider_uid      TEXT NOT NULL,
+  login             TEXT NOT NULL,
+  display_name      TEXT,
+  avatar_url        TEXT,
+  profile_url       TEXT,
+  role              TEXT NOT NULL DEFAULT 'user',
+  status            TEXT NOT NULL DEFAULT 'active',
+  created_at        TEXT NOT NULL,
+  last_seen_at      TEXT NOT NULL,
+  UNIQUE(provider, provider_uid)
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id           INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash        TEXT NOT NULL UNIQUE,
+  created_at        TEXT NOT NULL,
+  expires_at        TEXT NOT NULL,
+  last_seen_at      TEXT NOT NULL,
+  ip_hash           TEXT,
+  user_agent        TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expiry ON sessions(expires_at);
+
+CREATE TABLE IF NOT EXISTS competition_submissions (
+  id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id               INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title                 TEXT NOT NULL,
+  url                   TEXT,
+  category              TEXT NOT NULL DEFAULT 'academic',
+  field                 TEXT,
+  description           TEXT NOT NULL,
+  expected_deadline     TEXT,
+  status                TEXT NOT NULL DEFAULT 'pending',
+  admin_note            TEXT,
+  created_at            TEXT NOT NULL,
+  reviewed_at           TEXT,
+  reviewed_by           TEXT,
+  accepted_edition_id   INTEGER REFERENCES event_editions(id) ON DELETE SET NULL,
+  ip_hash               TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_submissions_status ON competition_submissions(status, created_at);
+CREATE INDEX IF NOT EXISTS idx_submissions_user ON competition_submissions(user_id, created_at);
 
 CREATE TABLE IF NOT EXISTS settings (
   key        TEXT PRIMARY KEY,

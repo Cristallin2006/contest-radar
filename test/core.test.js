@@ -110,7 +110,7 @@ test("legacy competitions migrate into series/edition/stage and are idempotent",
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM event_stages").get().n, 4);
   assert.ok(db.prepare("SELECT COUNT(*) AS n FROM event_series").get().n >= 1);
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM edition_tags").get().n, 3);
-  assert.deepEqual(schema.ensureSchema(), { version: 3, migrated: 0, classified: 0 });
+  assert.deepEqual(schema.ensureSchema(), { version: 4, migrated: 0, classified: 0 });
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM event_editions").get().n, 2);
 });
 

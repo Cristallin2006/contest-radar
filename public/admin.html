@@ -40,6 +40,7 @@
     <nav class="admin-tabs" aria-label="管理模块">
       <button class="admin-tab active" data-tab="overview" type="button">概览</button>
       <button class="admin-tab" data-tab="pending" type="button">待审核 <span id="pendingBadge" class="badge hidden">0</span></button>
+      <button class="admin-tab" data-tab="submissions" type="button">用户投稿 <span id="submissionBadge" class="badge hidden">0</span></button>
       <button class="admin-tab" data-tab="editions" type="button">赛事</button>
       <button class="admin-tab" data-tab="taxonomy" type="button">系列 / 标签</button>
       <button class="admin-tab" data-tab="sources" type="button">数据源</button>
@@ -80,6 +81,22 @@
       </div>
       <p class="muted">采集器默认只进入待审核区。采纳时会新建系列/届次/阶段；也可以合并到已有届次。</p>
       <div id="pendingList" class="pending-list"></div>
+    </section>
+
+    <section id="panel-submissions" class="admin-panel hidden">
+      <div class="panel-heading">
+        <div><p class="eyebrow">CONTRIBUTIONS</p><h2>用户投稿</h2></div>
+        <div class="heading-actions">
+          <select id="submissionState" class="small-input" aria-label="投稿状态">
+            <option value="pending">待审核</option>
+            <option value="accepted">已采用</option>
+            <option value="rejected">未采用</option>
+          </select>
+          <button id="submissionReload" class="secondary-btn" type="button">刷新</button>
+        </div>
+      </div>
+      <p class="muted">采用后会创建一个草稿赛事；管理员补充日期、阶段和来源后再发布。</p>
+      <div id="submissionList" class="pending-list"></div>
     </section>
 
     <section id="panel-editions" class="admin-panel hidden">

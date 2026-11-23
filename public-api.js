@@ -8,7 +8,9 @@ import {
 } from "./events.js";
 import { ingestStats } from "./ingest.js";
 import { getMeta } from "./schema.js";
-import { error, etagOf, ifNoneMatch, json, sendText } from "./http.js";
+import { clientIp, error, etagOf, ifNoneMatch, json, readJson, sendText } from "./http.js";
+import { currentUser } from "./auth.js";
+import { createSubmission, listMySubmissions } from "./submissions.js";
 
 function filtersFrom(url) {
   const q = url.searchParams;
@@ -71,6 +73,32 @@ function sendIcs(req, res, body) {
 export async function handlePublicApi(req, res, url, ctx = {}) {
   const pathname = url.pathname;
   if (!pathname.startsWith("/api/v1/") || pathname.startsWith("/api/v1/admin")) return false;
+
+  if (pathname === "/api/v1/submissions" && req.method === "POST") {
+    const user = currentUser(req);
+    if (!user) {
+      error(res, "LOGIN_REQUIRED", 401, "请先使用 GitHub 登录");
+      return true;
+    }
+    try {
+      const item = createSubmission(user, await readJson(req), clientIp(req));
+      json(res, 201, { ok: true, item });
+    } catch (err) {
+      error(res, "SUBMISSION_INVALID", err.status || 400, String(err.message || err));
+    }
+    return true;
+  }
+
+  if (pathname === "/api/v1/submissions/mine" && (req.method === "GET" || req.method === "HEAD")) {
+    const user = currentUser(req);
+    if (!user) {
+      error(res, "LOGIN_REQUIRED", 401, "请先使用 GitHub 登录");
+      return true;
+    }
+    json(res, 200, { items: listMySubmissions(user) });
+    return true;
+  }
+
   if (req.method !== "GET" && req.method !== "HEAD") {
     error(res, "METHOD_NOT_ALLOWED", 405, "公开接口只读");
     return true;

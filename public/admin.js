@@ -17,6 +17,7 @@
     token: sessionStorage.getItem("cr.admin.token") || "",
     tab: "overview",
     pending: [],
+    submissions: [],
     editions: [],
     series: [],
     tags: [],
@@ -99,6 +100,7 @@
     if (panel) panel.classList.remove("hidden");
     if (tab === "overview") loadOverview().catch((e) => setMessage(e.message, true));
     if (tab === "pending") loadPending().catch((e) => setMessage(e.message, true));
+    if (tab === "submissions") loadSubmissions().catch((e) => setMessage(e.message, true));
     if (tab === "editions") loadEditions().catch((e) => setMessage(e.message, true));
     if (tab === "taxonomy") loadTaxonomy().catch((e) => setMessage(e.message, true));
     if (tab === "sources") loadSources().catch((e) => setMessage(e.message, true));
@@ -118,6 +120,9 @@
     const pending = data.ingest?.pending || 0;
     $("#pendingBadge").textContent = String(pending);
     $("#pendingBadge").classList.toggle("hidden", pending === 0);
+    const submissionPending = data.submissions?.pending || 0;
+    $("#submissionBadge").textContent = String(submissionPending);
+    $("#submissionBadge").classList.toggle("hidden", submissionPending === 0);
     $("#overviewCards").innerHTML = [
       metric("已发布赛事", data.editions?.published ?? 0, `全部 ${data.editions?.total ?? 0} 条`),
       metric("待审核采集", pending, "采纳后才公开"),
@@ -314,6 +319,41 @@
         <button class="danger-btn" data-action="reject" data-id="${item.id}" type="button">忽略</button>
       </div>
     </article>`;
+  }
+
+  async function loadSubmissions() {
+    const status = $("#submissionState")?.value || "pending";
+    const data = await api(`/submissions?state=${encodeURIComponent(status)}&limit=200`);
+    state.submissions = data.items || [];
+    const list = $("#submissionList");
+    if (!state.submissions.length) {
+      list.innerHTML = '<p class="muted">没有这个状态的投稿。</p>';
+      return;
+    }
+    const labels = { pending: "待审核", accepted: "已采用", rejected: "未采用" };
+    list.innerHTML = state.submissions.map((item) => `<article class="pending-card" data-id="${item.id}">
+      <header>
+        <div>
+          <h3>${esc(item.title)}</h3>
+          <div class="meta">
+            ${pills([`@${item.login}`, item.category, item.field || "方向待定", labels[item.status] || item.status])}
+          </div>
+        </div>
+        <span class="pill">#${item.id}</span>
+      </header>
+      <dl>
+        <dt>提交者</dt><dd>${esc(item.display_name || item.login)}（@${esc(item.login)}）</dd>
+        <dt>官网</dt><dd>${item.url ? `<a href="${attr(item.url)}" target="_blank" rel="noreferrer">${esc(item.url)}</a>` : "—"}</dd>
+        <dt>报名截止</dt><dd>${esc(item.expected_deadline || "未提供")}</dd>
+        <dt>简介</dt><dd>${esc(item.description)}</dd>
+        <dt>提交时间</dt><dd>${esc(formatDate(item.created_at))}</dd>
+        ${item.admin_note ? `<dt>审核备注</dt><dd>${esc(item.admin_note)}</dd>` : ""}
+        ${item.accepted_edition_id ? `<dt>草稿赛事</dt><dd>#${item.accepted_edition_id}</dd>` : ""}
+      </dl>
+      <div class="pending-actions">
+        ${item.status === "pending" ? `<button class="primary-btn" data-sub-action="accept" data-id="${item.id}" type="button">采用并建草稿</button><button class="danger-btn" data-sub-action="reject" data-id="${item.id}" type="button">拒绝</button>` : ""}
+      </div>
+    </article>`).join("");
   }
 
   async function loadEditions() {
@@ -612,6 +652,31 @@
       }
     });
     $("#logoutBtn").addEventListener("click", logout);
+    $("#submissionReload")?.addEventListener("click", () => loadSubmissions().catch((e) => setMessage(e.message, true)));
+    $("#submissionState")?.addEventListener("change", () => loadSubmissions().catch((e) => setMessage(e.message, true)));
+    $("#submissionList")?.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-sub-action]");
+      if (!button) return;
+      const id = Number(button.dataset.id);
+      const action = button.dataset.subAction;
+      if (action === "accept") {
+        if (!confirm("采用后会创建一个草稿赛事，确定继续？")) return;
+        try {
+          const result = await api(`/submissions/${id}/accept`, { method: "POST" });
+          alert(`已创建草稿赛事 #${result.edition.id}，请到赛事库补充日期。`);
+          await loadSubmissions();
+          await loadOverview();
+        } catch (err) { alert(err.message); }
+      } else if (action === "reject") {
+        const reason = prompt("拒绝原因（会显示给投稿者）：", "信息不足，暂不收录");
+        if (reason === null) return;
+        try {
+          await api(`/submissions/${id}/reject`, { method: "POST", body: JSON.stringify({ reason }) });
+          await loadSubmissions();
+          await loadOverview();
+        } catch (err) { alert(err.message); }
+      }
+    });
     document.querySelectorAll(".admin-tab").forEach((btn) => {
       btn.addEventListener("click", () => switchTab(btn.dataset.tab));
     });
