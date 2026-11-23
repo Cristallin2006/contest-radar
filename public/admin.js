@@ -9,6 +9,13 @@
     ["language", "外语 / 翻译"], ["humanities", "人文 / 社科"], ["sports", "体育 / 电竞"],
     ["other", "其他 / 待细分"],
   ];
+  const RECOGNITION_OPTIONS = [
+    ["", "无 / 未标注"],
+    ["miit_talent", "工信部人才中心主办"],
+    ["miit_joint", "工信部联合主办"],
+    ["miit_related", "工信部系统相关"],
+    ["miit_historical", "工信部历史主办"],
+  ];
   const CONTENT_OPTIONS = [
     ["competition", "竞赛"], ["volunteer", "志愿者 / 招募"], ["conference", "论坛 / 会议"],
     ["course", "课程 / 培训 / 证书"], ["activity", "庆典 / 活动"], ["other", "其他"],
@@ -514,6 +521,7 @@
           ])}
           ${select("方向", "field", e.field || "other", FIELD_OPTIONS)}
           ${select("内容类型", "content_type", e.content_type || "competition", CONTENT_OPTIONS)}
+          ${select("工信部关系", "recognition", e.recognition || "", RECOGNITION_OPTIONS)}
           ${select("生命周期", "lifecycle", e.lifecycle || "normal", [
             ["normal", "正常"], ["postponed", "延期"], ["cancelled", "取消"], ["finished", "结束"],
           ])}
@@ -526,6 +534,8 @@
           ${field("来源", "source", e.source || "manual")}
           ${field("报名链接", "signup_url", e.signup_url || "")}
           ${field("原文链接", "source_url", e.source_url || "")}
+          ${field("工信部说明", "recognition_note", e.recognition_note || "")}
+          ${field("工信部依据链接", "recognition_source", e.recognition_source || "")}
           ${field("队伍人数下限", "team_size_min", e.team_size_min || "", "number")}
           ${field("队伍人数上限", "team_size_max", e.team_size_max || "", "number")}
           ${field("难度 1-5", "difficulty", e.difficulty || "", "number")}
@@ -583,6 +593,9 @@
       category: readField(form, "category"),
       field: readField(form, "field"),
       content_type: readField(form, "content_type"),
+      recognition: readField(form, "recognition") || null,
+      recognition_note: readField(form, "recognition_note") || null,
+      recognition_source: readField(form, "recognition_source") || null,
       lifecycle: readField(form, "lifecycle"),
       publish_state: readField(form, "publish_state"),
       date_confidence: readField(form, "date_confidence"),

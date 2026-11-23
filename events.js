@@ -32,6 +32,13 @@ export const STATUS_LABELS = {
   unknown: "待定",
 };
 
+export const RECOGNITION_LABELS = {
+  miit_talent: "工信部人才中心主办",
+  miit_joint: "工信部联合主办",
+  miit_historical: "工信部历史主办",
+  miit_related: "工信部系统相关",
+};
+
 export const LIFECYCLE_LABELS = {
   normal: "正常",
   postponed: "延期",
@@ -283,6 +290,7 @@ export function presentEdition(row, stageRows = [], tagRows = [], now = nowMs())
     category_label: CATEGORY_LABELS[row.category] || row.category,
     field_label: FIELD_LABELS[row.field] || row.field,
     content_type_label: CONTENT_TYPE_LABELS[row.content_type] || row.content_type,
+    recognition_label: RECOGNITION_LABELS[row.recognition] || null,
     region_label: REGION_LABELS[row.region] || row.region,
     source_name: SOURCE_NAMES[row.source] || row.source,
     next_start: nextStart,
@@ -674,6 +682,13 @@ function editionFields(input, current = null) {
     content_source: contentSource,
     content_reason: contentReason,
     source_category: sourceCategory,
+    recognition: input.recognition !== undefined
+      ? (RECOGNITION_LABELS[input.recognition] ? input.recognition : null)
+      : (current?.recognition ?? null),
+    recognition_note: input.recognition_note !== undefined
+      ? (input.recognition_note || null) : (current?.recognition_note ?? null),
+    recognition_source: input.recognition_source !== undefined
+      ? httpUrl(input.recognition_source) : (current?.recognition_source ?? null),
     year: input.year !== undefined ? Number(input.year) || null : (current?.year ?? null),
     region: normalizeRegion(input.region ?? current?.region, input.category ?? current?.category),
     category,
@@ -698,7 +713,9 @@ function editionFields(input, current = null) {
     publish_state: PUBLISH_STATES.includes(input.publish_state) ? input.publish_state : (current?.publish_state || "draft"),
     external_ref: input.external_ref !== undefined
       ? (typeof input.external_ref === "string" ? input.external_ref : JSON.stringify(input.external_ref || {}))
-      : (current?.external_ref ?? null),
+      : (current?.external_ref == null
+        ? null
+        : (typeof current.external_ref === "string" ? current.external_ref : JSON.stringify(current.external_ref))),
     created_at: current?.created_at ?? now,
     updated_at: now,
   };
@@ -708,21 +725,21 @@ function insertEdition(fields) {
   return Number(db.prepare(`
     INSERT INTO event_editions (series_id, title, organizer, description, field, field_confidence,
       field_source, field_reason, content_type, content_confidence, content_source, content_reason,
-      source_category, year, region, category, lifecycle, status_override, signup_org, signup_channel,
-      internal_deadline_note, signup_url, source_url, team_size_min, team_size_max, eligibility,
-      difficulty, fee, prizes, source, source_rank, date_confidence, verified_at, publish_state,
-      external_ref, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      source_category, recognition, recognition_note, recognition_source, year, region, category,
+      lifecycle, status_override, signup_org, signup_channel, internal_deadline_note, signup_url,
+      source_url, team_size_min, team_size_max, eligibility, difficulty, fee, prizes, source,
+      source_rank, date_confidence, verified_at, publish_state, external_ref, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     fields.series_id, fields.title, fields.organizer, fields.description, fields.field,
     fields.field_confidence, fields.field_source, fields.field_reason, fields.content_type,
     fields.content_confidence, fields.content_source, fields.content_reason, fields.source_category,
-    fields.year, fields.region, fields.category, fields.lifecycle, fields.status_override,
-    fields.signup_org, fields.signup_channel, fields.internal_deadline_note, fields.signup_url,
-    fields.source_url, fields.team_size_min, fields.team_size_max, fields.eligibility,
-    fields.difficulty, fields.fee, fields.prizes, fields.source, fields.source_rank,
-    fields.date_confidence, fields.verified_at, fields.publish_state, fields.external_ref,
-    fields.created_at, fields.updated_at,
+    fields.recognition, fields.recognition_note, fields.recognition_source, fields.year,
+    fields.region, fields.category, fields.lifecycle, fields.status_override, fields.signup_org,
+    fields.signup_channel, fields.internal_deadline_note, fields.signup_url, fields.source_url,
+    fields.team_size_min, fields.team_size_max, fields.eligibility, fields.difficulty, fields.fee,
+    fields.prizes, fields.source, fields.source_rank, fields.date_confidence, fields.verified_at,
+    fields.publish_state, fields.external_ref, fields.created_at, fields.updated_at,
   ).lastInsertRowid);
 }
 
@@ -731,21 +748,22 @@ function updateEditionRow(id, fields) {
     UPDATE event_editions SET series_id = ?, title = ?, organizer = ?, description = ?, field = ?,
       field_confidence = ?, field_source = ?, field_reason = ?, content_type = ?,
       content_confidence = ?, content_source = ?, content_reason = ?, source_category = ?,
-      year = ?, region = ?, category = ?, lifecycle = ?, status_override = ?, signup_org = ?,
-      signup_channel = ?, internal_deadline_note = ?, signup_url = ?, source_url = ?,
-      team_size_min = ?, team_size_max = ?, eligibility = ?, difficulty = ?, fee = ?, prizes = ?,
-      source = ?, source_rank = ?, date_confidence = ?, verified_at = ?, publish_state = ?,
-      external_ref = ?, updated_at = ? WHERE id = ?
+      recognition = ?, recognition_note = ?, recognition_source = ?, year = ?, region = ?,
+      category = ?, lifecycle = ?, status_override = ?, signup_org = ?, signup_channel = ?,
+      internal_deadline_note = ?, signup_url = ?, source_url = ?, team_size_min = ?, team_size_max = ?,
+      eligibility = ?, difficulty = ?, fee = ?, prizes = ?, source = ?, source_rank = ?,
+      date_confidence = ?, verified_at = ?, publish_state = ?, external_ref = ?, updated_at = ?
+      WHERE id = ?
   `).run(
     fields.series_id, fields.title, fields.organizer, fields.description, fields.field,
     fields.field_confidence, fields.field_source, fields.field_reason, fields.content_type,
     fields.content_confidence, fields.content_source, fields.content_reason, fields.source_category,
-    fields.year, fields.region, fields.category, fields.lifecycle, fields.status_override,
-    fields.signup_org, fields.signup_channel, fields.internal_deadline_note, fields.signup_url,
-    fields.source_url, fields.team_size_min, fields.team_size_max, fields.eligibility,
-    fields.difficulty, fields.fee, fields.prizes, fields.source, fields.source_rank,
-    fields.date_confidence, fields.verified_at, fields.publish_state, fields.external_ref,
-    fields.updated_at, id,
+    fields.recognition, fields.recognition_note, fields.recognition_source, fields.year,
+    fields.region, fields.category, fields.lifecycle, fields.status_override, fields.signup_org,
+    fields.signup_channel, fields.internal_deadline_note, fields.signup_url, fields.source_url,
+    fields.team_size_min, fields.team_size_max, fields.eligibility, fields.difficulty, fields.fee,
+    fields.prizes, fields.source, fields.source_rank, fields.date_confidence, fields.verified_at,
+    fields.publish_state, fields.external_ref, fields.updated_at, id,
   );
 }
 
@@ -769,7 +787,7 @@ export function updateEdition(id, input, { actor = "admin", ip = null } = {}) {
     if (!current) throw new Error("赛事不存在");
     const fields = editionFields(input, current);
     const diff = {};
-    const keys = ["title", "organizer", "description", "field", "content_type", "year", "region", "category", "lifecycle", "status_override", "publish_state", "signup_url", "source_url", "fee", "prizes", "eligibility", "difficulty", "date_confidence"];
+    const keys = ["title", "organizer", "description", "field", "content_type", "recognition", "recognition_note", "year", "region", "category", "lifecycle", "status_override", "publish_state", "signup_url", "source_url", "fee", "prizes", "eligibility", "difficulty", "date_confidence"];
     for (const key of keys) {
       if (String(current[key] ?? "") !== String(fields[key] ?? "")) diff[key] = { from: current[key] ?? null, to: fields[key] ?? null };
     }

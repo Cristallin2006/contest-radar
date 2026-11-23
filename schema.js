@@ -2,7 +2,7 @@ import { db } from "./db.js";
 import { ctfDisplayName } from "./collectors/ctf.js";
 import { classifyEdition } from "./classify.js";
 
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 const NOW = () => new Date().toISOString();
 
@@ -271,6 +271,15 @@ CREATE TABLE IF NOT EXISTS settings (
   if (!editionCols.includes("description")) {
     db.exec("ALTER TABLE event_editions ADD COLUMN description TEXT");
   }
+  const recognitionColumns = [
+    ["recognition", "TEXT"],
+    ["recognition_note", "TEXT"],
+    ["recognition_source", "TEXT"],
+  ];
+  for (const [name, type] of recognitionColumns) {
+    if (!editionCols.includes(name)) db.exec(`ALTER TABLE event_editions ADD COLUMN ${name} ${type}`);
+  }
+
   const classificationColumns = [
     ["field", "TEXT NOT NULL DEFAULT 'other'"],
     ["field_confidence", "TEXT NOT NULL DEFAULT 'low'"],

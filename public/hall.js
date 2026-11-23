@@ -136,6 +136,7 @@
         <span class="hall-badge field">${esc(fieldLabel(item))}</span>
         <span class="hall-badge">${esc(REGION_LABELS[regionOf(item)])}</span>
         <span class="hall-badge status ${esc(status)}">${esc(STATUS_LABELS[status] || status)}</span>
+        ${item.recognition_label ? `<a class="hall-badge recognition" href="/miit" title="${esc(item.recognition_note || "工信部关系说明")}">${esc(item.recognition_label)}</a>` : ""}
         ${item.date_confidence === "estimated" ? '<span class="hall-badge">预计</span>' : ""}
       </div>
       <h3><a href="/hall?open=${encodeURIComponent(item.id)}" data-detail="${esc(item.id)}">${esc(item.title)}</a></h3>
@@ -254,6 +255,7 @@
         <span class="hall-badge field">${esc(d.field_label || FIELD_LABELS[d.field] || "其他")}</span>
         <span class="hall-badge">${esc(d.region_label || REGION_LABELS[regionOf(d)])}</span>
         <span class="hall-badge status ${esc(status)}">${esc(STATUS_LABELS[status] || status)}</span>
+        ${d.recognition_label ? `<a class="hall-badge recognition" href="/miit" title="${esc(d.recognition_note || "工信部关系说明")}">${esc(d.recognition_label)}</a>` : ""}
         ${d.date_confidence === "estimated" ? '<span class="hall-badge">日期预计</span>' : ""}
       </div>
       <h2 id="hallDetailTitle" class="hall-detail-title">${esc(d.title)}</h2>

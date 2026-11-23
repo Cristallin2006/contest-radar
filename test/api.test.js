@@ -76,7 +76,7 @@ test("public health exposes schema version", async () => {
   const { res, data } = await json("/api/v1/health");
   assert.equal(res.status, 200);
   assert.equal(data.ok, true);
-  assert.equal(data.schema_version, 5);
+  assert.equal(data.schema_version, 6);
 });
 
 let editionId;
@@ -210,7 +210,7 @@ test("admin overview reports the created edition", async () => {
   assert.equal(res.status, 200);
   assert.equal(data.editions.published, 1);
   assert.equal(data.stages, 2);
-  assert.equal(data.schema_version, 5);
+  assert.equal(data.schema_version, 6);
 });
 
 test("admin can manage series and tags", async () => {

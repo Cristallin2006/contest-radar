@@ -179,6 +179,8 @@
       url: raw.signup_url || raw.source_url || "",
       sourceUrl: raw.source_url || "",
       source: raw.source_name || raw.source || "",
+      recognition: raw.recognition_label || "",
+      recognitionNote: raw.recognition_note || "",
       verified: raw.verified_at || raw.last_checked || "",
       eligibility: raw.eligibility || "",
       stages: buckets,
@@ -277,7 +279,7 @@
         const label = `${event.title} · ${stage.label} · ${formatDate(stage.day)} ${stage.time} · ${stage.estimated ? "预计" : "官方"}`;
         return `<button type="button" class="stop" style="--day-x:${position(stage.day)}" data-event="${esc(event.id)}" data-stage="${stage.bucket}" data-stop-day="${stage.day}" aria-pressed="false" aria-label="${esc(label)}" title="${esc(label)}">${icon(SYMBOLS[stage.bucket])}</button>`;
       }).join("");
-      return `<div class="track-label" data-track="${esc(event.id)}"><button type="button" data-event="${esc(event.id)}" data-stage="0" aria-pressed="false">${esc(event.title)}<small>${esc(event.category)}${pending ? " · 后续待公布" : ""}</small></button></div><div class="track" data-track="${esc(event.id)}">${rails}${stub}${stops}</div>`;
+      return `<div class="track-label" data-track="${esc(event.id)}"><button type="button" data-event="${esc(event.id)}" data-stage="0" aria-pressed="false">${esc(event.title)}<small>${esc(event.category)}${event.recognition ? ` · ${esc(event.recognition)}` : ""}${pending ? " · 后续待公布" : ""}</small></button></div><div class="track" data-track="${esc(event.id)}">${rails}${stub}${stops}</div>`;
     }).join("") || `<div class="empty-map"><strong>${state.savedOnly ? "当前筛选下没有收藏赛事" : "没有匹配的赛事"}</strong><p>${state.savedOnly ? "可切换地区或回到全部赛事。" : "试试其他关键词、地区或类别。"}</p></div>`;
   }
 
@@ -307,7 +309,7 @@
     bookmark.setAttribute("aria-label", saved ? "取消收藏赛事" : "收藏赛事");
     bookmark.innerHTML = icon(saved ? "saved" : "bookmark");
     $("steps").innerHTML = event.detailStages.map((item) => `<li class="${item.key === stage.key ? "is-active" : ""}">${icon(SYMBOLS[item.bucket])}<span>${esc(item.label)}</span><time>${esc(item.dateText)}${item.time !== "全天" ? ` ${esc(item.time)}` : ""}${item.estimated ? " · 预计" : ""}</time></li>`).join("");
-    $("detail-note").innerHTML = [event.organizer, event.source, event.verified ? `核实于 ${esc(String(event.verified).slice(0, 10))}` : ""].filter(Boolean).map(esc).join(" · ");
+    $("detail-note").innerHTML = [event.organizer, event.source, event.recognition, event.verified ? `核实于 ${esc(String(event.verified).slice(0, 10))}` : ""].filter(Boolean).map(esc).join(" · ");
     const links = [];
     const official = safeUrl(event.url);
     if (official) links.push(`<a href="${esc(official)}" target="_blank" rel="noreferrer">打开官网</a>`);

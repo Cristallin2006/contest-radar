@@ -42,6 +42,7 @@
 - [公开 API v1](docs/api.md)
 - [数据与时间免责声明](docs/disclaimer.md)
 - [安全审查记录](docs/security.md)
+- [工信部相关竞赛说明](docs/miit-competitions.md)
 - [GitHub 登录与投稿实现](docs/auth-submissions.md)
 - [匿名版需求文档](docs/requirements-v0.2-anon.md)
 - [匿名版架构设计](docs/architecture-v0.2-anon.md)

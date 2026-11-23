@@ -415,6 +415,7 @@ function cardHtml(item) {
       <div class="card-top">
         <span class="badge cat">${esc(catLabel(item))}</span>
         ${item.field_label ? `<span class="badge field">${esc(item.field_label)}</span>` : ""}
+        ${item.recognition_label ? `<span class="badge recognition" title="${esc(item.recognition_note || "工信部关系说明")}">${esc(item.recognition_label)}</span>` : ""}
         <span class="badge status ${esc(statusCls)}">${STATUS_LABEL[item.status] || "待定"}</span>
         <span class="badge confidence ${esc(item.date_confidence)}">${confidenceText(item.date_confidence)}</span>
         ${match ? `<span class="badge match ${match.blocked ? "blocked" : ""}">匹配 ${match.score}</span>` : ""}

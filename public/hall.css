@@ -177,3 +177,6 @@ body.detail-open { overflow: hidden; }
 .hall-cta-links a.secondary{background:#fffdf5;color:var(--green)}
 .hall-cta-links a:hover{text-decoration:underline;text-underline-offset:2px}
 @media(max-width:620px){.hall-cta{align-items:flex-start;flex-direction:column;gap:8px}.hall-cta-links{width:100%}.hall-cta-links a{flex:1}}
+
+.hall-badge.recognition{color:#7a3d16;border-color:#d9b58e;background:#fbf1df;text-decoration:none}
+.hall-badge.recognition:hover{text-decoration:underline;text-underline-offset:2px}

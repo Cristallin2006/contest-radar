@@ -52,6 +52,8 @@ curl 'https://contest.07212006.xyz/api/v1/editions?region=cn&category=mathmodel&
       "field": "math",
       "field_label": "数学 / 建模",
       "content_type": "competition",
+      "recognition": "miit_talent",
+      "recognition_label": "工信部人才中心主办",
       "region": "cn",
       "region_label": "国内",
       "status": "ongoing",
@@ -129,7 +131,7 @@ GET /api/v1/health
 ```json
 {
   "ok": true,
-  "schema_version": 5,
+  "schema_version": 6,
   "editions": 230,
   "pending_ingest": 0,
   "last_refresh": "2026-11-23T11:18:00.228Z",

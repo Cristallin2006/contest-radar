@@ -541,3 +541,5 @@ button { cursor: pointer; }
 .quick-links a.secondary { background:#fff; color:var(--accent); }
 .quick-links a:hover { text-decoration:underline; text-underline-offset:2px; }
 @media (max-width:700px) { .quick-cta { align-items:flex-start; flex-direction:column; margin:12px 14px 0; } .quick-links { width:100%; } .quick-links a { flex:1; } }
+
+.badge.recognition { color: #7a3d16; background: #fbf1df; border: 1px solid #d9b58e; font-weight: 700; }
