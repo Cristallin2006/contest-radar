@@ -8,6 +8,10 @@
 > 上游版权归原作者所有；本项目不是 freebie-radar 官方项目，也不代表上游背书。
 > 完整说明见 [ATTRIBUTION.md](ATTRIBUTION.md)，许可证见 [LICENSE](LICENSE)。
 
+## 预览
+
+![竞赛雷达首页](docs/screenshot-home.png)
+
 ## 功能概览
 
 - 国内 / 国外分区，默认国内
