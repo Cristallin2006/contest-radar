@@ -168,3 +168,12 @@ body.detail-open { overflow: hidden; }
 .hall-more:hover { background:#eef2e8; border-color:#8fa495; }
 
 .site-days{color:var(--red);font:700 10px var(--mono);white-space:nowrap}
+.hall-cta{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 12px;padding:11px 14px;border:1px solid #b8c4b5;background:#f8f7ec}
+.hall-cta strong{display:block;font:700 15px var(--serif);letter-spacing:-.02em}
+.hall-cta span{display:block;margin-top:3px;color:var(--quiet);font-size:11px;line-height:1.6}
+.hall-cta-links{display:flex;gap:6px;flex:none}
+.hall-cta-links a{display:inline-flex;align-items:center;justify-content:center;min-height:31px;padding:5px 11px;border-radius:3px;border:1px solid #b8c4b5;text-decoration:none;font-size:11px;font-weight:700;white-space:nowrap}
+.hall-cta-links a.primary{background:var(--green);border-color:var(--green);color:#fff}
+.hall-cta-links a.secondary{background:#fffdf5;color:var(--green)}
+.hall-cta-links a:hover{text-decoration:underline;text-underline-offset:2px}
+@media(max-width:620px){.hall-cta{align-items:flex-start;flex-direction:column;gap:8px}.hall-cta-links{width:100%}.hall-cta-links a{flex:1}}
