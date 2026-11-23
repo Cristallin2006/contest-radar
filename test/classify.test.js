@@ -27,6 +27,8 @@ test("source-native Saikr category wins over ambiguous title words", () => {
   assert.equal(field("2026年第八届大学生英语写作大赛", "academic", { source: "saikr", source_category: "english" }).field, "language");
   assert.equal(field("大学生人工智能应用挑战赛", "academic", { source: "saikr", source_category: "ai" }).field, "software");
   assert.equal(field("大学生艺术设计作品征集", "academic", { source: "saikr", source_category: "art_assessment" }).field, "design");
+  assert.equal(field("C++ 编程巅峰赛", "academic", { source: "saikr", source_category: "big_data" }).field, "software");
+  assert.equal(field("第三届“中西挑战杯”大学生数据分析大赛", "academic", { source: "saikr", source_category: "match" }).field, "data");
 });
 
 test("non-competition content is flagged", () => {

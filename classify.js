@@ -48,8 +48,6 @@ export const CONTENT_TYPE_ORDER = [
 
 const SAIKR_SOURCE_FIELDS = {
   english: "language",
-  ai: "software",
-  computer: "software",
   big_data: "data",
   mcm: "math",
   robot: "electronics",
@@ -57,10 +55,7 @@ const SAIKR_SOURCE_FIELDS = {
   health: "science",
   art_assessment: "design",
   song_and_dance: "design",
-  society: "humanities",
-  occupation: "business",
   business: "business",
-  match: "other",
 };
 
 function textOf(value) {
@@ -75,7 +70,7 @@ function rule(field, include, reason, exclude = null) {
 const FIELD_OVERRIDES = [
   rule("design", /华灿奖|AIGC|AI生成世界|AI图像|AI视频|视觉传达|服装服饰设计|环境设计|工业设计|产品设计|广告艺术|好创意|数字艺术|科技美术|新媒体创新创意/i, "设计/艺术专项"),
   rule("business", /中国国际大学生创新大赛|营销|金融科技|电子商务|商务谈判|贸易|创业|工商管理|人力资源|税收|财税|经济管理|创新创业/i, "商科/管理专项"),
-  rule("other", /挑战杯|乡村振兴|标准化奥林匹克|一带一路暨金砖国家技能发展与技术创新/i, "综合/交叉赛事"),
+  rule("other", /^“挑战杯”|^挑战杯全国|全国大学生课外学术科技作品|乡村振兴|标准化奥林匹克|一带一路暨金砖国家技能发展与技术创新/i, "综合/交叉赛事"),
 ];
 
 // Order matters: earlier rules win. Keep broad, ambiguous words out.
@@ -101,10 +96,13 @@ const NON_COMPETITION_RULES = [
   ["activity", /庆典|展播|晚会|嘉年华|颁奖典礼|文化节/i, "庆典/活动"],
 ];
 
-function sourceField(source, sourceCategory) {
+function sourceField(source, sourceCategory, title) {
   if (!sourceCategory) return null;
   const raw = textOf(sourceCategory).toLowerCase();
   if (source === "saikr") {
+    // "big_data" is too broad on Saikr: C++/IoT and data-analysis contests
+    // share it. Trust the title unless it clearly names data work.
+    if (raw === "big_data" && !/数据|统计|分析/.test(title)) return null;
     const field = SAIKR_SOURCE_FIELDS[raw];
     if (field) return { field, reason: `赛氪分类 ${sourceCategory}` };
   }
@@ -145,7 +143,7 @@ export function classifyCompetition(input = {}) {
   let fieldSource = "rule";
   let reason = "未命中方向规则";
 
-  const sourceMatch = sourceField(source, sourceCategory);
+  const sourceMatch = sourceField(source, sourceCategory, title);
   if (sourceMatch) {
     field = sourceMatch.field;
     confidence = "high";
