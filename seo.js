@@ -164,7 +164,7 @@ export function renderCompetitionPage(item, base) {
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="${esc(item.title)}">
 <meta name="twitter:description" content="${esc(description)}">
-<link rel="stylesheet" href="/competition.css?v=20261124a">
+<link rel="stylesheet" href="/competition.css?v=20261124f">
 <script type="application/ld+json">${jsonLd(event)}</script>
 <script type="application/ld+json">${jsonLd(breadcrumb)}</script>
 </head>
@@ -219,5 +219,5 @@ export function renderCompetitionPage(item, base) {
 }
 
 export function renderNotFound(base) {
-  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>赛事不存在 · 竞赛雷达</title><meta name="robots" content="noindex"><link rel="stylesheet" href="/competition.css?v=20261124a"></head><body><main class="seo-shell"><h1>赛事不存在或未公开</h1><p><a href="/hall">返回竞赛馆</a></p></main></body></html>`;
+  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>赛事不存在 · 竞赛雷达</title><meta name="robots" content="noindex"><link rel="stylesheet" href="/competition.css?v=20261124f"></head><body><main class="seo-shell"><h1>赛事不存在或未公开</h1><p><a href="/hall">返回竞赛馆</a></p></main></body></html>`;
 }

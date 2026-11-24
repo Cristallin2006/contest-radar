@@ -1,6 +1,6 @@
 :root {
-  --paper: #f7f5ec; --surround: #e8e8de; --ink: #23392e; --quiet: #667065;
-  --line: #d3d5c8; --strong: #aeb8aa; --green: #315d49; --red: #a0402b;
+  --paper: #FAF9F4; --surround: #ECEBE6; --ink: #262A26; --quiet: #6D716C;
+  --line: #D8D8D1; --strong: #B8BBB5; --green: #315d49; --red: #a0402b;
   --mono: "Cascadia Mono", Consolas, monospace; --serif: Georgia, "Songti SC", SimSun, serif;
   font-family: system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
   color: var(--ink); background: var(--surround);
@@ -8,7 +8,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; }
 a { color: inherit; }
-.seo-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px clamp(16px, 4.5vw, 62px); border-bottom: 1px solid #b7c2b5; background: #f2f2e8; }
+.seo-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px clamp(16px, 4.5vw, 62px); border-bottom: 1px solid #C6C8C2; background: #F1F0EB; }
 .seo-brand { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--green); font-weight: 750; }
 .seo-brand .mark { width: 18px; height: 18px; border: 1px solid currentColor; border-radius: 50%; position: relative; }
 .seo-brand .mark::after { content: ""; position: absolute; left: 7px; top: 7px; width: 7px; height: 1px; background: currentColor; transform: rotate(-48deg); transform-origin: left center; }
@@ -21,8 +21,8 @@ a { color: inherit; }
 .seo-hero { border-bottom: 1px solid var(--strong); padding-bottom: 20px; }
 .seo-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 11px; }
 .seo-badge { display: inline-block; padding: 2px 6px; border: 1px solid var(--line); border-radius: 2px; color: var(--quiet); font-size: 10px; text-decoration: none; }
-.seo-badge.field { color: #4e5e54; background: #f0f1e8; }
-.seo-badge.status { color: #2b6448; border-color: #b8d2c1; background: #edf6ee; }
+.seo-badge.field { color: #565A55; background: #F2F1ED; }
+.seo-badge.status { color: #2b6448; border-color: #C4D2C6; background: #EFF3EF; }
 .seo-badge.recognition { color: #7a3d16; border-color: #d9b58e; background: #fbf1df; font-weight: 700; }
 .seo-hero h1 { margin: 0; font: 700 clamp(31px, 5.5vw, 62px)/1.08 var(--serif); letter-spacing: -.06em; overflow-wrap: anywhere; }
 .seo-sub { margin: 9px 0 0; color: var(--quiet); font-size: 12px; line-height: 1.7; }
@@ -34,13 +34,13 @@ a { color: inherit; }
 .seo-layout { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(240px, 1fr); gap: 28px; align-items: start; margin-top: 22px; }
 .seo-main section { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
 .seo-main h2, .seo-card h2 { margin: 0 0 10px; font: 700 21px var(--serif); letter-spacing: -.04em; }
-.seo-description { margin: 0; color: #4e5b51; font-size: 13px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
+.seo-description { margin: 0; color: #565A55; font-size: 13px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
 .seo-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
 .seo-fact { background: var(--paper); padding: 8px 10px; font-size: 11px; line-height: 1.6; }
 .seo-fact b { display: block; margin-bottom: 2px; color: var(--quiet); font-weight: 500; font-size: 10px; }
 .seo-fact span { overflow-wrap: anywhere; }
 .seo-stages { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
-.seo-stages li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; padding: 9px 0; border-bottom: 1px dashed #d9dbcf; }
+.seo-stages li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; padding: 9px 0; border-bottom: 1px dashed #DCDCD6; }
 .seo-stage-kind { color: var(--quiet); font: 10px var(--mono); padding-top: 2px; }
 .seo-stages strong { display: block; font-size: 12px; }
 .seo-stages small { display: block; color: var(--quiet); font-size: 11px; line-height: 1.6; margin-top: 2px; }
@@ -53,7 +53,7 @@ a { color: inherit; }
 .seo-related { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
 .seo-related a { text-decoration: none; color: var(--green); font-size: 12px; line-height: 1.5; }
 .seo-related small { display: block; color: var(--quiet); font-size: 10px; margin-top: 1px; }
-.seo-card p { color: #4e5b51; font-size: 11px; line-height: 1.75; margin: 0 0 7px; }
+.seo-card p { color: #565A55; font-size: 11px; line-height: 1.75; margin: 0 0 7px; }
 .seo-card p a { color: var(--green); }
 .seo-footer { margin-top: 30px; padding-top: 13px; border-top: 1px solid var(--line); color: var(--quiet); font-size: 10px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .site-days { color: var(--red); font: 700 10px var(--mono); }
