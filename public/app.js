@@ -100,6 +100,69 @@ const daysText = (n) => {
 };
 const confidenceText = (c) => ({ confirmed: "官方", estimated: "预计", unknown: "待核对" }[c] || "待核对");
 
+function cleanTitle(value) {
+  let text = String(value || "").trim();
+  text = text.replace(/^【([^】]{1,36})】\s*/, (whole, inner) =>
+    /榜单|推荐|赛事|竞赛|大赛|挑战赛|开赛|开考|截止|报名/.test(inner) ? "" : whole);
+  text = text.replace(/^\[([^\]]{1,36})\]\s*/, (whole, inner) =>
+    /榜单|推荐|赛事|竞赛|大赛|挑战赛|开赛|开考|截止|报名/.test(inner) ? "" : whole);
+  return text.trim() || String(value || "未命名赛事");
+}
+
+function cleanSummary(value) {
+  let text = String(value || "").replace(/\s+/g, " ").trim();
+  if (!text) return "";
+  text = text.replace(/^【[^】]{1,40}】\s*/, "");
+  const parts = text.split(/\s*[|｜]\s*/).map((part) => part.trim()).filter(Boolean);
+  const useful = parts.find((part) =>
+    part.length >= 14 &&
+    !/^(主办单位|承办单位|协办单位|报名时间|比赛时间|赛事时间|官网|来源|高校学生竞赛网收录|收录)/.test(part)
+  );
+  if (!useful) return "";
+  let out = useful.replace(/^[：:，,、\s]+/, "").replace(/[。；;]\s*$/, "");
+  if (!out || /^(报名|比赛时间|赛事时间)/.test(out) || /主办单位|报名时间|高校学生竞赛网收录|收录|正在报名/.test(out)) return "";
+  if (out.length > 76) out = `${out.slice(0, 75).trimEnd()}…`;
+  return out;
+}
+
+function cleanOrganizer(value) {
+  let text = String(value || "").trim();
+  text = text.replace(/^(我爱竞赛网|赛氪|高校学生竞赛网)\s*收录\s*[·,，]?\s*/u, "");
+  return text || "主办方待补充";
+}
+
+function cleanDescription(value) {
+  let text = String(value || "").replace(/\s+/g, " ").trim();
+  if (!text) return "";
+  text = text.replace(/^【[^】]{1,40}】\s*/, "");
+  const parts = text.split(/\s*[|｜]\s*/).map((part) => part.trim()).filter(Boolean);
+  const kept = parts.filter((part) =>
+    !/^(主办单位|承办单位|协办单位|报名时间|比赛时间|赛事时间|官网|来源|高校学生竞赛网收录|收录)/.test(part) &&
+    !/正在报名$/.test(part)
+  );
+  const out = kept.join("。").replace(/[。；;]\s*$/, "").trim();
+  return out.length > 8 ? out : "";
+}
+
+function cardDate(date) {
+  if (!date) return null;
+  const iso = fmtDate(date);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
+  const stamp = new Date(`${iso}T00:00:00+08:00`);
+  if (Number.isNaN(stamp.getTime())) return null;
+  return {
+    short: `${iso.slice(5, 7)}.${iso.slice(8, 10)}`,
+    weekday: stamp.toLocaleDateString("zh-CN", { weekday: "short", timeZone: "Asia/Shanghai" }),
+    full: iso,
+  };
+}
+
+function cardUrgency(item, days) {
+  if (item.status === "ended" || item.status === "closed" || item.status === "cancelled") return "muted";
+  if (item.status === "closing" || (days !== null && days !== undefined && days <= 7)) return "urgent";
+  return "normal";
+}
+
 function loadFavs() {
   try {
     const raw = JSON.parse(localStorage.getItem(FAV_KEY) || "[]");
@@ -391,52 +454,61 @@ function favButton(item, modal = false) {
 function cardHtml(item) {
   const color = catColor(item);
   const match = matchFor(item);
-  const dl = deadlineOf(item);
+  const deadline = deadlineOf(item);
+  const date = cardDate(deadline.date);
   const days = item.days_left;
-  const daysCls = days !== null && days !== undefined && days <= 7 ? "" : "safe";
-  const statusCls = item.status || "unknown";
-  const deadlineLine = dl.date
-    ? `<span class="${dl.kind === "registration" && days !== null && days <= 7 ? "deadline" : "deadline safe"}"><span class="k">${dl.label}</span>${fmtDate(dl.date)}${days !== null && days !== undefined ? ` · ${daysText(days)}` : ""}</span>`
-    : `<span><span class="k">${dl.label}</span>待官方公布</span>`;
-  const eventLine = item.event_start
-    ? `<span><span class="k">比赛</span>${fmtRange(item.event_start, item.event_end)}</span>`
+  const urgency = cardUrgency(item, days);
+  const title = cleanTitle(item.name);
+  let summary = cleanSummary(item.description);
+  if (summary && (summary === title || summary.includes(title.slice(0, 12)) || title.includes(summary.slice(0, 12)))) summary = "";
+  const official = safeUrl(item.url);
+  const status = STATUS_LABEL[item.status] || "待定";
+  const daysLabel = days === 0 ? "今天截止" : days === 1 ? "明天截止" : days > 1 ? `剩 ${days} 天` : "";
+  const tabStatus = !date
+    ? status
+    : days === 0
+      ? "今天截止"
+      : days === 1
+        ? "明天截止"
+        : deadline.kind === "start"
+          ? "开赛"
+          : ["cancelled", "postponed"].includes(item.status)
+            ? status
+            : "";
+  const meta = [
+    cleanOrganizer(item.organizer),
+    catLabel(item),
+    item.field_label,
+    item.mode && item.mode !== "unknown" ? (MODE_LABEL[item.mode] || item.mode) : "",
+    item.team_size ? `${item.team_size}` : "",
+  ].filter(Boolean);
+  const confidence = item.date_confidence === "estimated"
+    ? '<span class="card-est">预计</span>'
     : "";
-  const modeLine = item.mode && item.mode !== "unknown" ? `<span><span class="k">形式</span>${esc(MODE_LABEL[item.mode] || item.mode)}</span>` : "";
-  const teamLine = item.team_size ? `<span><span class="k">队伍</span>${esc(item.team_size)}</span>` : "";
-  const feeLine = item.fee ? `<span><span class="k">费用</span>${esc(item.fee)}</span>` : "";
-  const daysBadge = days !== null && days !== undefined && ["closing", "open", "upcoming"].includes(item.status)
-    ? `<span class="badge days ${daysCls}">${daysText(days)}</span>`
+  const recognition = item.recognition_label
+    ? `<span class="card-recognition" title="${esc(item.recognition_note || item.recognition_label)}">${esc(item.recognition_label.replace("工信部人才中心主办", "工信部"))}</span>`
     : "";
   return `
-  <article class="card" data-key="${esc(item.key)}" style="--cat:${color}">
-    <div class="stripe"></div>
-    ${favButton(item)}
-    <div class="card-body">
-      <div class="card-top">
-        <span class="badge cat">${esc(catLabel(item))}</span>
-        ${item.field_label ? `<span class="badge field">${esc(item.field_label)}</span>` : ""}
-        ${item.recognition_label ? `<span class="badge recognition" title="${esc(item.recognition_note || "工信部关系说明")}">${esc(item.recognition_label)}</span>` : ""}
-        <span class="badge status ${esc(statusCls)}">${STATUS_LABEL[item.status] || "待定"}</span>
-        <span class="badge confidence ${esc(item.date_confidence)}">${confidenceText(item.date_confidence)}</span>
-        ${match ? `<span class="badge match ${match.blocked ? "blocked" : ""}">匹配 ${match.score}</span>` : ""}
-        ${daysBadge}
-      </div>
-      <h3><a href="${esc(safeUrl(item.url))}" target="_blank" rel="noreferrer">${esc(item.name)}</a></h3>
-      <p class="org">${esc(item.organizer || "主办方待补充")}${item.discipline ? ` · ${esc(item.discipline)}` : ""}</p>
-      <div class="meta">
-        ${deadlineLine}
-        ${eventLine}
-        ${modeLine}
-        ${teamLine}
-        ${feeLine}
-      </div>
-      <p class="desc">${esc(item.description || "")}</p>
+  <article class="card ${urgency}" data-key="${esc(item.key)}" style="--cat:${color}">
+    <div class="date-tab">
+      ${date ? `<span class="date-short" title="${esc(date.full)}">${esc(date.short)}</span><span class="date-week">${esc(date.weekday)}</span>` : '<span class="date-short">待定</span><span class="date-week">日期未定</span>'}
+      ${daysLabel ? `<span class="date-days">${esc(daysLabel)}</span>` : ""}
+      ${date && tabStatus && tabStatus !== daysLabel ? `<span class="date-status">${esc(tabStatus)}</span>` : ""}
+      ${!date ? `<span class="date-status">${esc(status)}</span>` : ""}
+    </div>
+    <div class="card-main">
+      <h3 class="card-title"><a href="/competition/${encodeURIComponent(item.id)}">${esc(title)}</a></h3>
+      <p class="card-meta"><span class="cat-dot" aria-hidden="true"></span>${meta.map(esc).join(" · ")}${recognition}${confidence}</p>
+      ${summary ? `<p class="card-summary">${esc(summary)}</p>` : ""}
       <div class="card-foot">
-        <span class="src">${esc(item.source_name || item.source)}</span>
-        <span>${esc(String(item.last_checked || "").slice(0, 10))}</span>
-        <a class="go" href="/competition/${encodeURIComponent(item.id)}">详情</a>
-        <a class="go" href="${esc(safeUrl(item.url))}" target="_blank" rel="noreferrer">官网 →</a>
+        <span class="card-source">来源 ${esc(item.source_name || item.source || "未知")}</span>
+        <span class="card-verified">${esc(String(item.last_checked || "").slice(0, 10))} 核实</span>
+        ${match ? `<span class="card-match">匹配 ${match.score}</span>` : ""}
       </div>
+    </div>
+    <div class="card-rail">
+      ${favButton(item)}
+      ${official ? `<a class="card-official" href="${esc(official)}" target="_blank" rel="noreferrer" aria-label="打开官网" title="打开官网">↗</a>` : ""}
     </div>
   </article>`;
 }
@@ -765,6 +837,9 @@ function openModal(key) {
   if (!item) return;
   state.modalKey = key;
   const color = catColor(item);
+  const modalTitle = cleanTitle(item.name);
+  let modalBody = cleanDescription(item.description);
+  if (modalBody && (modalBody === modalTitle || modalBody.includes(modalTitle.slice(0, 12)) || modalTitle.includes(modalBody.slice(0, 12)))) modalBody = "";
   const rows = [
     ["系列", item.series_name || "一次性赛事"],
     ["方向", item.field_label || "待细分"],
@@ -780,18 +855,13 @@ function openModal(key) {
     ["最后核实", item.last_checked ? String(item.last_checked).slice(0, 16).replace("T", " ") : "—"],
   ];
   $("#modalBody").innerHTML = `
-    <div class="card-top">
-      <span class="badge cat" style="--cat:${color}">${esc(catLabel(item))}</span>
-      <span class="badge status ${esc(item.status)}">${STATUS_LABEL[item.status] || "待定"}</span>
-      <span class="badge confidence ${esc(item.date_confidence)}">${confidenceText(item.date_confidence)}</span>
-      ${item.days_left !== null && item.days_left !== undefined ? `<span class="badge days">${daysText(item.days_left)}</span>` : ""}
-    </div>
-    <h2>${esc(item.name)}</h2>
-    <p class="org">${esc(item.organizer || "主办方待补充")}${item.discipline ? ` · ${esc(item.discipline)}` : ""}</p>
+    <div class="card-meta modal-meta"><span class="cat-dot" style="--cat:${color}" aria-hidden="true"></span>${esc(catLabel(item))} · ${esc(STATUS_LABEL[item.status] || "待定")} · ${esc(confidenceText(item.date_confidence))}${item.days_left !== null && item.days_left !== undefined ? ` · ${esc(daysText(item.days_left))}` : ""}</div>
+    <h2>${esc(modalTitle)}</h2>
+    <p class="org">${esc(cleanOrganizer(item.organizer))}${item.discipline ? ` · ${esc(item.discipline)}` : ""}</p>
     <div class="detail-grid">
       ${rows.map(([k, v]) => `<div class="item"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join("")}
     </div>
-    <div class="body">${esc(item.description || "暂无描述。")}</div>
+    <div class="body">${esc(modalBody || "暂无简介。")}</div>
     <div class="stage-section">${stageTimelineHtml(item)}</div>
     ${item.tags?.length ? `<div class="tag-row">${item.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>` : ""}
     ${matchFor(item) ? `<div class="match-reasons"><b>匹配 ${matchFor(item).score}/100</b>${matchFor(item).blocked ? '<span class="block-reason">硬条件不满足</span>' : ""}<ul>${matchFor(item).reasons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul></div>` : ""}
