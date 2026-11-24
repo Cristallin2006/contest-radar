@@ -416,3 +416,70 @@ body {
   .selects { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .selects select { width: 100%; min-width: 0; }
 }
+
+/* Compact archive header: no oversized editorial explanation. */
+.page-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 24px;
+  padding: 10px 0 18px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #aeb8aa;
+  background: none;
+}
+.page-head-main { min-width: 0; }
+.page-head h1 {
+  margin: 0;
+  font: 700 clamp(36px, 5vw, 60px)/.96 var(--serif);
+  letter-spacing: -.075em;
+  color: var(--ink);
+}
+.page-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 10.5px;
+}
+.page-meta .sep { color: #b9c0b4; }
+.page-meta a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.page-actions { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 12px; }
+.page-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 5px 11px;
+  border-radius: var(--pill, 999px);
+  border: 1px solid #b8c4b5;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.page-actions a.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.page-actions a.secondary { background: #fbf9f1; color: var(--accent); }
+.page-actions a:hover { text-decoration: underline; text-underline-offset: 2px; }
+.page-head .hero-stats {
+  grid-template-columns: repeat(4, minmax(78px, 1fr));
+  gap: 7px;
+  min-width: 350px;
+  border: 0;
+  background: transparent;
+}
+.page-head .stat { padding: 10px 12px; border-radius: 12px; box-shadow: var(--soft-shadow); }
+.page-head .stat b { font-size: 22px; }
+.page-head .stat span { margin-top: 5px; font-size: 9.5px; }
+@media (max-width: 980px) {
+  .page-head { grid-template-columns: 1fr; gap: 14px; }
+  .page-head .hero-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); min-width: 0; }
+}
+@media (max-width: 620px) {
+  .page-head { padding-top: 6px; padding-bottom: 13px; margin-bottom: 12px; }
+  .page-head h1 { font-size: 42px; }
+  .page-head .hero-stats { grid-template-columns: 1fr 1fr; }
+  .page-actions { margin-top: 9px; }
+}

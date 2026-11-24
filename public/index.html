@@ -19,7 +19,7 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="alternate" type="text/calendar" title="竞赛雷达 ICS" href="/api/v1/ical/all.ics" />
   <link rel="stylesheet" href="/style.css?v=20261123j" />
-  <link rel="stylesheet" href="/list.css?v=20261124c" />
+  <link rel="stylesheet" href="/list.css?v=20261124d" />
 </head>
 <body>
   <header class="topbar">
@@ -44,27 +44,14 @@
     </nav>
   </header>
 
-  <div class="quick-cta" aria-label="参与竞赛雷达">
-    <div class="quick-copy"><strong>发现未收录的竞赛？</strong><span>投稿后会进入人工审核；想交流赛制和经验，去留言板。</span></div>
-    <div class="quick-links"><a class="primary" href="/submit">投稿竞赛</a><a class="secondary" href="/board">留言板</a></div>
-  </div>
-
   <main class="shell">
-    <section class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow">MULTI-SOURCE / DEADLINE FIRST</p>
-        <h1>把下一场比赛，<br />放进你的日历。</h1>
-        <p class="lede">
-          按「国内 / 国外」分区，默认国内；国内 CTF 打通官方赛事与日历源，
-          国外 CTF 只保留高权重赛事。按报名截止和开赛时间排序，标注官方 / 预计 / 待核对。
-        </p>
-        <div class="hero-meta">
-          <span id="updatedAt">正在采集…</span>
-          <span class="sep">·</span>
-          <a href="https://github.com/ZiChuanLan/freebie-radar" target="_blank" rel="noreferrer">灵感来自资源雷达</a>
-        </div>
+    <section class="page-head" aria-label="赛事库概览">
+      <div class="page-head-main">
+        <h1>赛事库</h1>
+        <p class="page-meta"><span id="updatedAt">正在采集…</span><span class="sep">·</span><a href="/docs.html">数据来自公开来源</a></p>
+        <div class="page-actions"><a class="primary" href="/submit">投稿竞赛</a><a class="secondary" href="/board">留言板</a></div>
       </div>
-      <div class="hero-stats" id="stats" aria-live="polite"></div>
+      <div id="stats" class="hero-stats" aria-live="polite"></div>
     </section>
 
     <section class="toolbar" aria-label="筛选">
