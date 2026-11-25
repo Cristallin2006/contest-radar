@@ -79,7 +79,7 @@ function safeEqual(a, b) {
 function sanitizeReturnTo(value) {
   const text = String(value || "");
   if (!text.startsWith("/") || text.startsWith("//") || text.includes("\\")) return "/submit";
-  if (!["/submit", "/hall", "/board", "/", "/list", "/changes"].some((path) => text === path || text.startsWith(`${path}?`))) {
+  if (!["/submit", "/hall", "/board", "/", "/list", "/changes", "/preview/arch-os/index.html"].some((path) => text === path || text.startsWith(`${path}?`))) {
     return "/submit";
   }
   return text;
