@@ -322,6 +322,9 @@ function serveStatic(req, res, pathname) {
       ".png": "image/png",
       ".jpg": "image/jpeg",
       ".jpeg": "image/jpeg",
+      ".woff2": "font/woff2",
+      ".woff": "font/woff",
+      ".ttf": "font/ttf",
       ".ico": "image/x-icon",
     }[ext] || "application/octet-stream";
     res.writeHead(200, {
