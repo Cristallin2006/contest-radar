@@ -277,7 +277,7 @@ test("default route, card list, and competition hall are routed correctly", asyn
   assert.equal(root.status, 200);
   assert.equal(root.headers.get("x-frame-options"), "DENY");
   assert.match(root.headers.get("content-security-policy"), /frame-ancestors 'none'/);
-  assert.match(await root.text(), /赛事线路图/);
+  assert.match(await root.text(), /赛线 OS · Arch Rice/);
   const list = await fetch(`${BASE}/list`);
   assert.equal(list.status, 200);
   assert.match(await list.text(), /竞赛雷达 · Contest Radar/);
