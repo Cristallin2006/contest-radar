@@ -31,7 +31,7 @@ import { stageCandidates } from "./ingest.js";
 import { handlePublicApi } from "./public-api.js";
 import { handleAuth } from "./auth.js";
 import { handleAdminApi } from "./admin-api.js";
-import { json, readJson } from "./http.js";
+import { clientIp, json, readJson, tokenMatches } from "./http.js";
 import { PRESENCE_WINDOW_SECONDS, touchPresence } from "./presence.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -292,7 +292,9 @@ function calendar(items, region = "") {
 }
 
 function serveStatic(req, res, pathname) {
-  let rel = decodeURIComponent(pathname);
+  let rel;
+  try { rel = decodeURIComponent(pathname); }
+  catch { res.writeHead(400, { "content-type": "text/plain; charset=utf-8" }); res.end("bad request"); return; }
   if (rel === "/os" || rel === "/cyberchef") {
     res.writeHead(301, { location: rel === "/os" ? "/os/" : "/cyberchef/" });
     res.end();
@@ -310,7 +312,8 @@ function serveStatic(req, res, pathname) {
   if (rel === "/board") rel = "/board.html";
   if (rel === "/miit") rel = "/miit.html";
   const file = path.normalize(path.join(PUBLIC_DIR, rel));
-  if (!file.startsWith(PUBLIC_DIR)) { res.writeHead(403); res.end("forbidden"); return; }
+  const relative = path.relative(PUBLIC_DIR, file);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) { res.writeHead(403); res.end("forbidden"); return; }
   fs.readFile(file, (err, buf) => {
     if (err) {
       // SPA fallback
@@ -366,6 +369,26 @@ function serveStatic(req, res, pathname) {
   });
 }
 
+const presenceAttempts = new Map();
+const PRESENCE_RATE_WINDOW_MS = 60_000;
+const PRESENCE_RATE_MAX = 60;
+function allowPresence(ip) {
+  const key = String(ip || "unknown");
+  const now = Date.now();
+  for (const [name, entry] of presenceAttempts) {
+    if (now - entry.startedAt > PRESENCE_RATE_WINDOW_MS) presenceAttempts.delete(name);
+  }
+  const current = presenceAttempts.get(key);
+  if (!current || now - current.startedAt > PRESENCE_RATE_WINDOW_MS) {
+    presenceAttempts.set(key, { startedAt: now, count: 1 });
+    return true;
+  }
+  if (current.count >= PRESENCE_RATE_MAX) return false;
+  current.count += 1;
+  if (presenceAttempts.size > 10_000) presenceAttempts.delete(presenceAttempts.keys().next().value);
+  return true;
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
   const pathname = url.pathname;
@@ -406,6 +429,7 @@ const server = http.createServer(async (req, res) => {
       }
       const visitor = String(body.visitor || "").trim();
       if (!/^[A-Za-z0-9_-]{8,128}$/.test(visitor)) return json(res, 400, { error: "invalid visitor" });
+      if (!allowPresence(clientIp(req))) return json(res, 429, { error: "too many presence updates" }, { "retry-after": "60" });
       const online = touchPresence(visitor);
       return json(res, 200, {
         online,
@@ -473,11 +497,14 @@ Disallow: /submit\nSitemap: ${baseUrlOf(req)}/sitemap.xml\nSitemap: ${baseUrlOf(
       return json(res, 200, { sources: allSources() });
     }
     if (pathname === "/api/logs") {
+      if (!ADMIN_TOKEN || !tokenMatches(req.headers["x-admin-token"], ADMIN_TOKEN)) {
+        return json(res, 401, { error: "unauthorized" });
+      }
       return json(res, 200, { logs: logs.slice(-80) });
     }
     if (pathname === "/api/refresh" && req.method === "POST") {
       if (!ADMIN_TOKEN) return json(res, 403, { error: "ADMIN_TOKEN 未配置，拒绝刷新" });
-      if (req.headers["x-admin-token"] !== ADMIN_TOKEN) return json(res, 401, { error: "unauthorized" });
+      if (!tokenMatches(req.headers["x-admin-token"], ADMIN_TOKEN)) return json(res, 401, { error: "unauthorized" });
       const result = await refreshAll();
       return json(res, 200, { ok: true, result });
     }

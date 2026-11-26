@@ -82,6 +82,27 @@ function adminList(url) {
   }, { admin: true });
 }
 
+const adminFailures = new Map();
+const ADMIN_FAILURE_WINDOW_MS = 15 * 60 * 1000;
+const ADMIN_FAILURE_MAX = 20;
+
+function adminAttempt(ip) {
+  const key = String(ip || "unknown");
+  const now = Date.now();
+  for (const [name, entry] of adminFailures) {
+    if (now - entry.startedAt > ADMIN_FAILURE_WINDOW_MS) adminFailures.delete(name);
+  }
+  const current = adminFailures.get(key);
+  if (!current || now - current.startedAt > ADMIN_FAILURE_WINDOW_MS) {
+    adminFailures.set(key, { startedAt: now, count: 1 });
+    return true;
+  }
+  if (current.count >= ADMIN_FAILURE_MAX) return false;
+  current.count += 1;
+  if (adminFailures.size > 10_000) adminFailures.delete(adminFailures.keys().next().value);
+  return true;
+}
+
 export async function handleAdminApi(req, res, url, ctx = {}) {
   const pathname = url.pathname;
   if (!pathname.startsWith("/api/v1/admin")) return false;
@@ -91,17 +112,19 @@ export async function handleAdminApi(req, res, url, ctx = {}) {
     error(res, "ADMIN_DISABLED", 401, "管理员令牌未配置");
     return true;
   }
+  const ip = clientIp(req);
   if (!tokenMatches(req.headers["x-admin-token"], expected)) {
+    if (!adminAttempt(ip)) return error(res, "TOO_MANY_ATTEMPTS", 429, "尝试过于频繁，请稍后再试");
     error(res, "UNAUTHORIZED", 401, "未授权");
     return true;
   }
+  adminFailures.delete(String(ip || "unknown"));
   if (!checkOrigin(req, ctx.allowedOrigins || [])) {
     error(res, "BAD_ORIGIN", 403, "Origin 不被允许");
     return true;
   }
 
   const actor = "admin-token";
-  const ip = clientIp(req);
   const method = req.method || "GET";
 
   try {

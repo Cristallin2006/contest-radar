@@ -242,7 +242,12 @@ export async function handleAuth(req, res, url) {
     await callbackGitHub(req, res, url);
     return true;
   }
-  if (pathname === "/auth/logout" && (req.method === "GET" || req.method === "POST")) {
+  if (pathname === "/auth/logout") {
+    if (req.method !== "POST") {
+      res.writeHead(405, { allow: "POST", "content-type": "text/plain; charset=utf-8" });
+      res.end("use POST to log out");
+      return true;
+    }
     logout(req, res);
     return true;
   }

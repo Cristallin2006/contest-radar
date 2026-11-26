@@ -68,7 +68,7 @@
       </div>
       <div style="display:flex;gap:12px;align-items:center">
         ${profile ? `<a class="submit-logout" href="${esc(profile)}" target="_blank" rel="noreferrer">GitHub 主页</a>` : ""}
-        <a class="submit-logout" href="/auth/logout">退出</a>
+        <form method="post" action="/auth/logout" style="display:inline"><button type="submit" class="submit-logout">退出</button></form>
       </div>
     </div>`;
     form.hidden = false;

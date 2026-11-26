@@ -81,3 +81,6 @@ button { cursor: pointer; }
 }
 
 .site-days{color:var(--red);font:700 10px var(--mono);white-space:nowrap}
+
+/* POST logout is a button styled like the previous text link. */
+button.submit-logout { padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }

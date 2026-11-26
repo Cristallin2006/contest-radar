@@ -1318,7 +1318,7 @@
     }
     const user = state.submitMe.user;
     const avatar = safeExternalUrl(user.avatar_url);
-    return `<div class="submit-auth"><span class="submit-user">${avatar ? `<img src="${esc(avatar)}" alt="" width="26" height="26" referrerpolicy="no-referrer">` : ""}<strong>${esc(user.display_name || user.login)}</strong><small>已登录</small></span><a class="btn" href="/auth/logout">退出</a></div>`;
+    return `<div class="submit-auth"><span class="submit-user">${avatar ? `<img src="${esc(avatar)}" alt="" width="26" height="26" referrerpolicy="no-referrer">` : ""}<strong>${esc(user.display_name || user.login)}</strong><small>已登录</small></span><form method="post" action="/auth/logout" style="display:inline"><button type="submit" class="btn">退出</button></form></div>`;
   }
 
   function submitMineHtml() {
@@ -1467,7 +1467,7 @@
     if (!state.boardMe.authenticated) return `<div class="board-auth"><span>GitHub 登录后发言</span><a class="btn" href="/auth/github?return_to=${encodeURIComponent(authReturnTo("board"))}">登录</a></div>`;
     const user = state.boardMe.user;
     const avatar = safeExternalUrl(user.avatar_url);
-    return `<div class="board-auth"><span class="board-user">${avatar ? `<img src="${esc(avatar)}" alt="" width="28" height="28" referrerpolicy="no-referrer">` : ""}<strong>${esc(user.display_name || user.login)}</strong></span><a class="btn" href="/auth/logout">退出</a></div>`;
+    return `<div class="board-auth"><span class="board-user">${avatar ? `<img src="${esc(avatar)}" alt="" width="28" height="28" referrerpolicy="no-referrer">` : ""}<strong>${esc(user.display_name || user.login)}</strong></span><form method="post" action="/auth/logout" style="display:inline"><button type="submit" class="btn">退出</button></form></div>`;
   }
 
   function boardListHtml() {

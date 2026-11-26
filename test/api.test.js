@@ -72,6 +72,27 @@ test("admin endpoints reject missing or wrong tokens", async () => {
   assert.equal(wrong.res.status, 401);
 });
 
+test("operational logs require the admin token", async () => {
+  const anonymous = await fetch(`${BASE}/api/logs`);
+  assert.equal(anonymous.status, 401);
+  const allowed = await json("/api/logs", { admin: true });
+  assert.equal(allowed.res.status, 200);
+  assert.ok(Array.isArray(allowed.data.logs));
+});
+
+test("logout requires POST and rejects GET", async () => {
+  const get = await fetch(`${BASE}/auth/logout`);
+  assert.equal(get.status, 405);
+  const post = await fetch(`${BASE}/auth/logout`, { method: "POST", redirect: "manual" });
+  assert.equal(post.status, 302);
+});
+
+test("encoded static traversal does not expose server source", async () => {
+  const response = await fetch(`${BASE}/%2e%2e/server.js`);
+  const body = await response.text();
+  assert.doesNotMatch(body, /PUBLIC_DIR|createServer|ADMIN_TOKEN/);
+});
+
 test("public health exposes schema version", async () => {
   const { res, data } = await json("/api/v1/health");
   assert.equal(res.status, 200);

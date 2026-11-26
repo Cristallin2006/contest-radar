@@ -54,7 +54,7 @@
     }
     const avatar = safeUrl(me.user.avatar_url);
     const profile = safeUrl(me.user.profile_url);
-    box.innerHTML = `<div class="submit-auth-card"><div class="submit-user">${avatar ? `<img src="${esc(avatar)}" alt="" referrerpolicy="no-referrer">` : ""}<div><strong>${esc(me.user.display_name || me.user.login)}</strong><small>@${esc(me.user.login)} · 已登录</small></div></div><div style="display:flex;gap:12px;align-items:center">${profile ? `<a class="submit-logout" href="${esc(profile)}" target="_blank" rel="noreferrer">GitHub 主页</a>` : ""}<a class="submit-logout" href="/auth/logout">退出</a></div></div>`;
+    box.innerHTML = `<div class="submit-auth-card"><div class="submit-user">${avatar ? `<img src="${esc(avatar)}" alt="" referrerpolicy="no-referrer">` : ""}<div><strong>${esc(me.user.display_name || me.user.login)}</strong><small>@${esc(me.user.login)} · 已登录</small></div></div><div style="display:flex;gap:12px;align-items:center">${profile ? `<a class="submit-logout" href="${esc(profile)}" target="_blank" rel="noreferrer">GitHub 主页</a>` : ""}<form method="post" action="/auth/logout" style="display:inline"><button type="submit" class="submit-logout">退出</button></form></div></div>`;
     composer.hidden = false;
   }
 

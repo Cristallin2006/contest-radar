@@ -68,6 +68,8 @@ export async function readJson(req, limit = 1_048_576) {
 }
 
 export function clientIp(req) {
+  const cloudflare = String(req.headers["cf-connecting-ip"] || "").trim();
+  if (cloudflare) return cloudflare;
   const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim();
   return forwarded || req.socket?.remoteAddress || null;
 }

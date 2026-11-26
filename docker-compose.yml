@@ -4,6 +4,13 @@ services:
     image: contest-radar:latest
     restart: unless-stopped
     mem_limit: 192m
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=64m
     ports:
       - "127.0.0.1:8789:8789"
     environment:
