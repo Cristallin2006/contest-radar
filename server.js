@@ -293,12 +293,13 @@ function calendar(items, region = "") {
 
 function serveStatic(req, res, pathname) {
   let rel = decodeURIComponent(pathname);
-  if (rel === "/os") {
-    res.writeHead(301, { location: "/os/" });
+  if (rel === "/os" || rel === "/cyberchef") {
+    res.writeHead(301, { location: rel === "/os" ? "/os/" : "/cyberchef/" });
     res.end();
     return;
   }
   if (rel === "/os/") rel = "/os/index.html";
+  if (rel === "/cyberchef/") rel = "/cyberchef/index.html";
   if (rel === "/" || rel === "/timeline") rel = "/timeline.html";
   if (rel === "/list") rel = "/index.html";
   if (rel === "/admin") rel = "/admin.html";
@@ -320,6 +321,24 @@ function serveStatic(req, res, pathname) {
       return;
     }
     const ext = path.extname(file).toLowerCase();
+    if (rel.startsWith("/cyberchef/")) {
+      res.setHeader("content-security-policy", [
+        "default-src 'self'",
+        "base-uri 'self'",
+        "object-src 'self' data: blob:",
+        "frame-ancestors 'self'",
+        "form-action 'self'",
+        "script-src 'self' 'unsafe-eval' 'unsafe-inline' 'wasm-unsafe-eval' https://static.cloudflareinsights.com",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: blob: https:",
+        "connect-src 'self' blob: https:",
+        "font-src 'self' data:",
+        "worker-src 'self' blob:",
+        "child-src 'self' blob:",
+        "frame-src 'self' blob: data: about:",
+      ].join("; "));
+      res.setHeader("x-frame-options", "SAMEORIGIN");
+    }
     const mime = {
       ".html": "text/html; charset=utf-8",
       ".css": "text/css; charset=utf-8",
@@ -332,6 +351,9 @@ function serveStatic(req, res, pathname) {
       ".woff2": "font/woff2",
       ".woff": "font/woff",
       ".ttf": "font/ttf",
+      ".wasm": "application/wasm",
+      ".map": "application/json; charset=utf-8",
+      ".webmanifest": "application/manifest+json",
       ".ico": "image/x-icon",
     }[ext] || "application/octet-stream";
     res.writeHead(200, {
