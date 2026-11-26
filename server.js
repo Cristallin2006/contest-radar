@@ -292,6 +292,12 @@ function calendar(items, region = "") {
 
 function serveStatic(req, res, pathname) {
   let rel = decodeURIComponent(pathname);
+  if (rel === "/os") {
+    res.writeHead(301, { location: "/os/" });
+    res.end();
+    return;
+  }
+  if (rel === "/os/") rel = "/os/index.html";
   if (rel === "/" || rel === "/timeline") rel = "/timeline.html";
   if (rel === "/list") rel = "/index.html";
   if (rel === "/admin") rel = "/admin.html";
