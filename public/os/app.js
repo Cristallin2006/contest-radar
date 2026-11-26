@@ -7,6 +7,7 @@
   const PUSH_KEY = "contestline.archos.push.v1";
   const DEFAULT_WALL = "kali-net";
   const CONTEST_VIEW_KEY = "contestline.archos.contestview.v1";
+  const ONBOARDING_KEY = "contestline.archos.onboarding.v1";
   const ONLINE_ORIGIN = "https://contest.07212006.xyz";
   const API_ENABLED = typeof location !== "undefined" && /^https?:$/.test(location.protocol) && (location.port === "8789" || !["localhost", "127.0.0.1"].includes(location.hostname));
 
@@ -116,6 +117,17 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+  const isMobileShell = () => window.innerWidth <= 760;
+  const shellHomeButton = () => isMobileShell() ? $("[data-mobile-home]") : $("#rofiTrigger");
+  const localDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+  function authReturnTo(app) {
+    const url = new URL(location.href);
+    url.hash = "";
+    url.searchParams.delete("event");
+    url.searchParams.set("app", app);
+    return `${url.pathname}${url.search}`;
+  }
 
   function loadSaved() {
     try {
@@ -183,6 +195,7 @@
     q: "",
     selected: null,
     pendingEvent: null,
+    pendingApp: null,
     contestView: (() => { try { return localStorage.getItem(CONTEST_VIEW_KEY) === "list" ? "list" : "table"; } catch { return "table"; } })(),
     saved: loadSaved(),
     read: loadRead(),
@@ -204,6 +217,7 @@
     submitMine: [],
     agendaTab: "timeline",
     agendaMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    agendaSelectedDate: localDateKey(new Date()),
     online: null,
     docTab: "api",
     push: loadPush(),
@@ -214,6 +228,9 @@
     rofiOpen: false,
     rofiIndex: 0,
     rofiItems: [],
+    onboardingOpen: false,
+    onboardingAutomatic: false,
+    onboardingSeen: (() => { try { return localStorage.getItem(ONBOARDING_KEY) === "seen"; } catch { return false; } })(),
   };
 
   state.wallpaperSelected = state.wallpaper.id;
@@ -365,6 +382,7 @@
     if (VALID.sort.includes(pick("sort"))) state.sort = pick("sort");
     if (pick("category") && CATEGORIES.some((item) => item.key === pick("category"))) state.category = pick("category");
     state.savedOnly = pick("saved") === "1";
+    state.pendingApp = APP_DEFS[pick("app")] && pick("app") !== "detail" ? pick("app") : null;
     const eventId = Number(pick("event"));
     state.pendingEvent = Number.isFinite(eventId) && eventId > 0 ? eventId : null;
   }
@@ -372,7 +390,7 @@
   function syncUrl(push = false) {
     if (historySuppressed) return;
     const params = new URLSearchParams(location.search);
-    for (const key of ["event", "view", "region", "status", "mode", "sort", "category", "saved"]) params.delete(key);
+    for (const key of ["event", "app", "view", "region", "status", "mode", "sort", "category", "saved"]) params.delete(key);
     if (state.contestView !== "table") params.set("view", state.contestView);
     if (state.region !== "all") params.set("region", state.region);
     if (state.status !== "all") params.set("status", state.status);
@@ -380,7 +398,8 @@
     if (state.sort !== "smart") params.set("sort", state.sort);
     if (state.category !== "all") params.set("category", state.category);
     if (state.savedOnly) params.set("saved", "1");
-    if (state.windows.detail && state.selected) params.set("event", String(state.selected));
+    if (state.active && state.active !== "detail" && (isMobileShell() || ["board", "submit"].includes(state.active))) params.set("app", state.active);
+    if (state.windows.detail && state.selected && (!isMobileShell() || state.active === "detail")) params.set("event", String(state.selected));
     const query = params.toString();
     const next = `${location.pathname}${query ? `?${query}` : ""}`;
     const method = push ? "pushState" : "replaceState";
@@ -395,11 +414,19 @@
     openDetail(item.id, { push });
   }
 
+  function openPendingApp() {
+    if (!state.pendingApp) return;
+    const id = state.pendingApp;
+    state.pendingApp = null;
+    openApp(id);
+  }
+
   function handlePopState() {
     historySuppressed = true;
     applyUrlState();
     refreshContests();
     refreshAgenda();
+    if (state.pendingApp) openPendingApp();
     if (state.pendingEvent) openPendingEvent(false);
     else if (state.windows.detail) closeApp("detail");
     historySuppressed = false;
@@ -495,12 +522,35 @@
     } catch { /* keep last count */ }
   }
 
+  let syncStatus = "snapshot";
+  let DEMO_LAST_REFRESH = null;
+
+  function syncTime(value) {
+    const date = new Date(value);
+    if (!value || Number.isNaN(date.getTime())) return "未知";
+    return date.toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Shanghai" }).replaceAll("/", "-");
+  }
+
+  function liveFreshnessText() {
+    return `本次读取 ${syncTime(DEMO_UPDATED)} · 最近采集 ${syncTime(DEMO_LAST_REFRESH)}`;
+  }
+
   function updateShellCounts() {
     $("#dataCount").textContent = `${DEMO_EVENTS.length} 场`;
     const modeLabel = $(".snapshot-label");
-    if (modeLabel) modeLabel.textContent = DEMO_LIVE ? "LIVE" : "SNAP";
+    if (modeLabel) modeLabel.textContent = syncStatus === "syncing" ? "SYNC" : DEMO_LIVE ? "LIVE" : "SNAP";
+    const status = $("#dataStatus");
+    if (status) status.dataset.state = syncStatus;
+    const retry = $("#syncRetry");
+    if (retry) retry.hidden = syncStatus !== "error";
     const freshness = $("#dataFreshness");
-    if (freshness) freshness.textContent = `${DEMO_LIVE ? "实时同步" : "公开快照"} · ${String(DEMO_UPDATED).slice(0, 10)}`;
+    if (freshness) {
+      if (syncStatus === "syncing") freshness.textContent = `同步中 · 保留${DEMO_LIVE ? "当前数据" : "公开快照"}`;
+      else if (syncStatus === "error") freshness.textContent = `同步失败 · ${DEMO_LIVE ? "显示上次数据" : "显示公开快照"}`;
+      else if (DEMO_LIVE) freshness.textContent = liveFreshnessText();
+      else freshness.textContent = `公开快照 · ${String(DEMO_UPDATED).slice(0, 10)}`;
+      if (status) status.title = `${$("#dataCount").textContent} · ${freshness.textContent}`;
+    }
     $("#savedTray").textContent = `★ ${state.saved.size}`;
     const unread = urgentEvents().filter(item => !state.read.has(item.id)).length;
     $("#notificationBadge").textContent = unread ? String(unread) : "";
@@ -646,6 +696,7 @@
 
   function openApp(id, { focus = true, animate = false } = {}) {
     if (!APP_DEFS[id]) return;
+    if (state.onboardingOpen) closeOnboarding({ restore: false });
     const layer = $("#windows").getBoundingClientRect();
     const isNew = !state.windows[id];
     if (isNew) {
@@ -689,14 +740,28 @@
   function closeApp(id) {
     $(`.window[data-app="${id}"]`)?.remove();
     delete state.windows[id];
-    if (id === "detail") syncUrl(false);
+    if (state.active === id) state.active = null;
     const remaining = visibleWindowIds();
     state.active = remaining.at(-1) || null;
     if (state.active) setActive(state.active);
+    syncUrl(false);
     renderTaskbar();
     if (state.tiled) layoutTiled();
     const next = state.active ? $(`.window[data-app="${state.active}"]`) : null;
-    (next || $("#rofiTrigger"))?.focus({ preventScroll: true });
+    (next || shellHomeButton())?.focus({ preventScroll: true });
+  }
+
+  function showMobileHome() {
+    historySuppressed = true;
+    for (const id of Object.keys(state.windows)) {
+      $(`.window[data-app="${id}"]`)?.remove();
+      delete state.windows[id];
+    }
+    state.active = null;
+    historySuppressed = false;
+    syncUrl(false);
+    renderTaskbar();
+    shellHomeButton()?.focus({ preventScroll: true });
   }
 
   function minimizeApp(id) {
@@ -710,7 +775,7 @@
     renderTaskbar();
     if (state.tiled) layoutTiled();
     const next = state.active ? $(`.window[data-app="${state.active}"]`) : null;
-    (next || $("#rofiTrigger"))?.focus({ preventScroll: true });
+    (next || shellHomeButton())?.focus({ preventScroll: true });
   }
 
   function maximizeApp(id) {
@@ -730,6 +795,21 @@
     $$("[data-workspace]").forEach(button => {
       if (button.dataset.workspace === String(state.workspace)) button.setAttribute("aria-current", "page");
       else button.removeAttribute("aria-current");
+    });
+    const mobileHome = $("[data-mobile-home]");
+    if (mobileHome) {
+      if (ids.length) mobileHome.removeAttribute("aria-current");
+      else mobileHome.setAttribute("aria-current", "page");
+    }
+    $("#mobileGuide").hidden = !isMobileShell();
+    if (state.onboardingOpen) renderOnboarding();
+    $$('[data-mobile-open]').forEach(button => {
+      if (state.active === button.dataset.mobileOpen && ids.includes(state.active)) button.setAttribute("aria-current", "page");
+      else button.removeAttribute("aria-current");
+    });
+    $$('[data-action="close"]').forEach(button => {
+      const title = APP_DEFS[button.dataset.app]?.title || "应用";
+      button.setAttribute("aria-label", `${isMobileShell() ? "返回，关闭" : "关闭"}${title}`);
     });
   }
 
@@ -830,10 +910,62 @@
   function openFromEvent(id) {
     openApp(id, { animate: true });
     toggleNotifications(false);
+    syncUrl();
   }
 
   function showAbout() {
-    toast(`竞赛雷达 · 赛事档案 · ${DEMO_LIVE ? "实时数据" : "公开数据快照"} ${String(DEMO_UPDATED).slice(0, 10)}`);
+    toast(`竞赛雷达 · 赛事档案 · ${DEMO_LIVE ? `API 数据 · ${liveFreshnessText()}` : `公开数据快照 ${String(DEMO_UPDATED).slice(0, 10)}`}`);
+  }
+
+  let onboardingReturnFocus = null;
+  let onboardingExit = null;
+
+  function renderOnboarding() {
+    $("#onboardingTitle").textContent = isMobileShell() ? "赛线使用指南" : "contestline --help";
+  }
+
+  function openOnboarding({ automatic = false, trigger = null } = {}) {
+    const node = $("#onboarding");
+    if (!node || state.onboardingOpen) return;
+    const active = document.activeElement;
+    onboardingReturnFocus = trigger || (active?.closest("#rofi") ? $("#rofiTrigger") : active);
+    if (state.rofiOpen) closeRofi(false);
+    toggleNotifications(false);
+    closeMenus();
+    if (onboardingExit) {
+      onboardingExit.cancel();
+      onboardingExit = null;
+    }
+    state.onboardingOpen = true;
+    state.onboardingAutomatic = automatic;
+    renderOnboarding();
+    node.hidden = false;
+    if (!automatic) $(".onboarding-done", node)?.focus({ preventScroll: true });
+  }
+
+  function closeOnboarding({ restore = true } = {}) {
+    const node = $("#onboarding");
+    if (!node || !state.onboardingOpen) return;
+    const automatic = state.onboardingAutomatic;
+    state.onboardingOpen = false;
+    state.onboardingAutomatic = false;
+    state.onboardingSeen = true;
+    try { localStorage.setItem(ONBOARDING_KEY, "seen"); } catch { }
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && typeof node.animate === "function") {
+      onboardingExit = node.animate([
+        { opacity: 1, translate: "0 0" },
+        { opacity: 0, translate: `0 ${isMobileShell() ? 12 : -6}px` },
+      ], { duration: 120, easing: "cubic-bezier(.23,1,.32,1)" });
+      const animation = onboardingExit;
+      animation.addEventListener("finish", () => {
+        if (!state.onboardingOpen) node.hidden = true;
+        animation.cancel();
+        if (onboardingExit === animation) onboardingExit = null;
+      }, { once: true });
+    } else {
+      node.hidden = true;
+    }
+    if (restore && !automatic && onboardingReturnFocus?.isConnected) onboardingReturnFocus.focus({ preventScroll: true });
   }
 
   function fmtDate(value) {
@@ -856,6 +988,10 @@
   }
 
   /* Contests */
+  function effectiveContestView() {
+    return isMobileShell() ? "list" : state.contestView;
+  }
+
   function contestsHtml() {
     const categories = CATEGORIES.filter((cat) => cat.key !== "all");
     return `<div class="app-toolbar">
@@ -883,7 +1019,7 @@
         ${categories.map((cat) => `<button type="button" class="tree-item ${state.category === cat.key ? "active" : ""}" data-tree-category="${cat.key}"><span>${cat.label}</span><b>${DEMO_EVENTS.filter((x) => x.category === cat.key).length}</b></button>`).join("")}
       </aside>
       <div class="list-pane">
-        ${state.contestView === "table" ? contestTableHtml() : `<div class="event-head"><span>赛事</span><span>下一节点</span><span>状态</span><span></span></div><div class="event-list" id="contestRows">${contestRowsHtml()}</div>`}
+        ${effectiveContestView() === "table" ? contestTableHtml() : `<div class="event-head"><span>赛事</span><span>下一节点</span><span>状态</span><span></span></div><div class="event-list" id="contestRows">${contestRowsHtml()}</div>`}
       </div>
     </div>`;
   }
@@ -975,10 +1111,12 @@
       <div class="detail-actions">
         ${official ? `<a class="btn primary" href="${esc(official)}" target="_blank" rel="noreferrer">打开官网</a>` : ""}
         <button type="button" class="btn" data-save="${item.id}">${saved ? "取消收藏" : "加入赛程"}</button>
-        ${source ? `<a class="btn" href="${esc(source)}" target="_blank" rel="noreferrer">查看来源</a>` : ""}
-        <a class="btn" href="/competition/${Number(item.id)}" target="_blank" rel="noreferrer">完整页面</a>
+        <button type="button" class="btn" data-copy-event="${item.id}">复制链接</button>
+        ${source ? `<a class="btn detail-secondary-action" href="${esc(source)}" target="_blank" rel="noreferrer">查看来源</a>` : ""}
+        <a class="btn detail-secondary-action" href="/competition/${Number(item.id)}" target="_blank" rel="noreferrer">完整页面</a>
       </div>
-      <p class="detail-source">${DEMO_LIVE ? "实时同步" : "公开快照"} · ${esc(String(DEMO_UPDATED).slice(0, 10))} · 以官网为准</p>
+      <p class="detail-source">${DEMO_LIVE ? esc(liveFreshnessText()) : `公开快照 · ${esc(String(DEMO_UPDATED).slice(0, 10))}`} · 以官网为准</p>
+      <p class="detail-mobile-links">${source ? `<a href="${esc(source)}" target="_blank" rel="noreferrer">查看来源</a>` : ""}<a href="/competition/${Number(item.id)}" target="_blank" rel="noreferrer">完整页面</a></p>
     </div>`;
   }
 
@@ -987,7 +1125,7 @@
     const pane = $('.window[data-app="contests"] .list-pane');
     if (!pane) return;
     const items = filteredEvents();
-    pane.innerHTML = state.contestView === "table"
+    pane.innerHTML = effectiveContestView() === "table"
       ? contestTableHtml()
       : `<div class="event-head"><span>赛事</span><span>下一节点</span><span>状态</span><span></span></div><div class="event-list" id="contestRows">${contestRowsHtml()}</div>`;
     const count = $('#contestCount');
@@ -1058,7 +1196,26 @@
       byDate.get(key).push(item);
     }
     const today = new Date();
-    const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const todayKey = localDateKey(today);
+    if (isMobileShell()) {
+      const selectedKey = state.agendaSelectedDate || todayKey;
+      const selectedEvents = byDate.get(selectedKey) || [];
+      const selectedDate = dateParts(selectedKey);
+      const cells = [];
+      for (let i = 0; i < start; i += 1) cells.push('<div class="agenda-day empty"></div>');
+      for (let day = 1; day <= days; day += 1) {
+        const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const events = byDate.get(key) || [];
+        cells.push(`<button type="button" class="agenda-day ${key === todayKey ? "today" : ""} ${key === selectedKey ? "selected" : ""}" data-agenda-date="${key}" aria-pressed="${key === selectedKey}" aria-label="${month + 1} 月 ${day} 日，${events.length ? `${events.length} 场赛事` : "无赛事"}"><span class="agenda-day-number">${day}</span>${events.length ? `<span class="agenda-day-count">${events.length} 场</span>` : ""}</button>`);
+      }
+      return `<div class="agenda-calendar">
+        <header class="agenda-cal-head"><div><span class="agenda-cal-kicker">CALENDAR / MONTH</span><h2>${year} 年 ${month + 1} 月</h2></div><div class="agenda-cal-nav"><button type="button" class="btn" data-agenda-prev aria-label="上个月">‹</button><button type="button" class="btn" data-agenda-today>今天</button><button type="button" class="btn" data-agenda-next aria-label="下个月">›</button></div></header>
+        <div class="agenda-week">${["日", "一", "二", "三", "四", "五", "六"].map((day) => `<span>${day}</span>`).join("")}</div>
+        <div class="agenda-grid">${cells.join("")}</div>
+        <section class="agenda-day-list" aria-label="当日赛事"><header><h3>${esc(selectedDate?.label || selectedKey)} · ${esc(selectedDate?.weekday || "")}</h3><span>${selectedEvents.length} 场</span></header>${selectedEvents.length ? selectedEvents.map((item) => `<button type="button" class="agenda-day-event" data-open-detail="${item.id}"><span><strong>${esc(cleanTitle(item.title))}</strong><small>${esc(item.category_label || item.category)} · ${esc(nodeLabel(item))}</small></span><time>${esc(statusCode(item) || dateParts(dateOf(item))?.short || "待定")}</time></button>`).join("") : '<p class="agenda-day-empty">当日没有赛事</p>'}</section>
+        <footer class="agenda-cal-foot">${items.filter((item) => !dateOf(item)).length ? `${items.filter((item) => !dateOf(item)).length} 场赛事日期待定，未显示在月历中` : `${DEMO_LIVE ? "日期来自当前 API 数据" : "日期以公开快照为准"}`}</footer>
+      </div>`;
+    }
     const cells = [];
     for (let i = 0; i < start; i += 1) cells.push('<div class="agenda-day empty"></div>');
     for (let day = 1; day <= days; day += 1) {
@@ -1074,8 +1231,23 @@
       <header class="agenda-cal-head"><div><span class="agenda-cal-kicker">CALENDAR / MONTH</span><h2>${year} 年 ${month + 1} 月</h2></div><div class="agenda-cal-nav"><button type="button" class="btn" data-agenda-prev aria-label="上个月">‹</button><button type="button" class="btn" data-agenda-today>今天</button><button type="button" class="btn" data-agenda-next aria-label="下个月">›</button></div></header>
       <div class="agenda-week">${["日", "一", "二", "三", "四", "五", "六"].map((day) => `<span>${day}</span>`).join("")}</div>
       <div class="agenda-grid">${cells.join("")}</div>
-      <footer class="agenda-cal-foot">${items.filter((item) => !dateOf(item)).length ? `${items.filter((item) => !dateOf(item)).length} 场赛事日期待定，未显示在月历中` : `${DEMO_LIVE ? "日期来自实时公开数据" : "日期以公开快照为准"}`}</footer>
+      <footer class="agenda-cal-foot">${items.filter((item) => !dateOf(item)).length ? `${items.filter((item) => !dateOf(item)).length} 场赛事日期待定，未显示在月历中` : `${DEMO_LIVE ? "日期来自当前 API 数据" : "日期以公开快照为准"}`}</footer>
     </div>`;
+  }
+
+  function moveAgendaMonth(offset) {
+    state.agendaMonth = new Date(state.agendaMonth.getFullYear(), state.agendaMonth.getMonth() + offset, 1);
+    const prefix = `${state.agendaMonth.getFullYear()}-${String(state.agendaMonth.getMonth() + 1).padStart(2, "0")}`;
+    const firstEvent = agendaItems().map((item) => dateOf(item)?.slice(0, 10)).find((date) => date?.startsWith(prefix));
+    state.agendaSelectedDate = firstEvent || `${prefix}-01`;
+    refreshAgenda();
+  }
+
+  function selectAgendaToday() {
+    const now = new Date();
+    state.agendaMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    state.agendaSelectedDate = localDateKey(now);
+    refreshAgenda();
   }
 
   function agendaHtml() {
@@ -1142,8 +1314,7 @@
     if (state.submitLoading && !state.submitMe) return `<div class="submit-auth"><span>正在检查 GitHub 登录…</span></div>`;
     if (!state.submitMe?.auth_enabled) return `<div class="submit-auth"><span>当前站点未启用登录</span></div>`;
     if (!state.submitMe.authenticated) {
-      const returnTo = location.pathname === "/" ? "/" : location.pathname.startsWith("/os") ? "/os/" : "/preview/arch-os/index.html";
-      return `<div class="submit-auth"><span>GitHub 登录后提交，审核通过才会公开。</span><a class="btn primary" href="/auth/github?return_to=${returnTo}">GitHub 登录</a></div>`;
+      return `<div class="submit-auth"><span>GitHub 登录后提交，审核通过才会公开。</span><a class="btn primary" href="/auth/github?return_to=${encodeURIComponent(authReturnTo("submit"))}">GitHub 登录</a></div>`;
     }
     const user = state.submitMe.user;
     const avatar = safeExternalUrl(user.avatar_url);
@@ -1293,7 +1464,7 @@
     if (!API_ENABLED) return `<div class="board-auth"><span>GitHub 登录后发言</span><a class="btn" href="${ONLINE_ORIGIN}/board" target="_blank" rel="noreferrer">打开线上留言板</a></div>`;
     if (state.boardLoading && !state.boardMe) return `<div class="board-auth"><span>正在读取登录状态…</span></div>`;
     if (!state.boardMe?.auth_enabled) return `<div class="board-auth"><span>当前站点未启用登录</span></div>`;
-    if (!state.boardMe.authenticated) return `<div class="board-auth"><span>GitHub 登录后发言</span><a class="btn" href="/auth/github?return_to=/board">登录</a></div>`;
+    if (!state.boardMe.authenticated) return `<div class="board-auth"><span>GitHub 登录后发言</span><a class="btn" href="/auth/github?return_to=${encodeURIComponent(authReturnTo("board"))}">登录</a></div>`;
     const user = state.boardMe.user;
     const avatar = safeExternalUrl(user.avatar_url);
     return `<div class="board-auth"><span class="board-user">${avatar ? `<img src="${esc(avatar)}" alt="" width="28" height="28" referrerpolicy="no-referrer">` : ""}<strong>${esc(user.display_name || user.login)}</strong></span><a class="btn" href="/auth/logout">退出</a></div>`;
@@ -1539,7 +1710,7 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
             <div><dt>Saved</dt><dd>${state.saved.size} local</dd></div>
           </dl>
         </section>
-        <div class="fetch-bottom"><span><b>${DEMO_LIVE ? "Live" : "Snapshot"}</b> ${esc(String(DEMO_UPDATED).slice(0, 10))}</span><span><b>Timezone</b> Asia/Shanghai</span></div>
+        <div class="fetch-bottom"><span><b>${DEMO_LIVE ? "Read" : "Snapshot"}</b> ${esc(syncTime(DEMO_UPDATED))}</span><span><b>Timezone</b> Asia/Shanghai</span></div>
         <div class="fetch-colors" aria-hidden="true">${colors}</div>
       </div>
     </section>`;
@@ -1696,7 +1867,7 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
       case "status": {
         const openCount = Object.keys(state.windows).length;
         appendTerm(`赛事 ${DEMO_EVENTS.length} · 收藏 ${state.saved.size} · 窗口 ${openCount}`, "success");
-        appendTerm(`${DEMO_LIVE ? "实时" : "快照"} ${String(DEMO_UPDATED).slice(0, 10)} · 国内 ${DEMO_EVENTS.filter(item => regionOf(item) === "cn").length} / 国外 ${DEMO_EVENTS.filter(item => regionOf(item) === "intl").length}`);
+        appendTerm(`${DEMO_LIVE ? `LIVE · ${liveFreshnessText()}` : `公开快照 · ${String(DEMO_UPDATED).slice(0, 10)}`} · 国内 ${DEMO_EVENTS.filter(item => regionOf(item) === "cn").length} / 国外 ${DEMO_EVENTS.filter(item => regionOf(item) === "intl").length}`);
         break;
       }
       case "pwd": appendTerm("/home/guest"); break;
@@ -1720,7 +1891,8 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
   function wallpaperHtml() {
     const selected = WALLPAPERS.find((item) => item.id === state.wallpaperSelected) || WALLPAPERS[0];
     const current = WALLPAPERS.find((item) => item.id === state.wallpaper.id) || WALLPAPERS[0];
-    return `<div class="wallpaper-app">
+    const pending = selected.id !== current.id;
+    return `<div class="wallpaper-app ${pending ? "has-pending" : ""}">
         <div class="wallpaper-library"><div class="wallpaper-grid" id="wallpaperGrid">${WALLPAPERS.map((item) => `<button type="button" class="wallpaper-card ${item.id === selected.id ? "selected" : ""} ${item.id === current.id ? "current" : ""}" data-wallpaper="${item.id}"><img class="wallpaper-thumb" src="${item.file}" alt="${esc(item.cn)} ${esc(item.name)}" width="320" height="180" loading="lazy"><span class="wallpaper-meta"><span class="wallpaper-name">${esc(item.cn)}</span></span></button>`).join("")}</div></div>
         <aside class="wallpaper-side">
           <section class="theme-settings" aria-label="窗口与终端主题">
@@ -1732,6 +1904,7 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
           <select class="fit-select" id="wallFit" aria-label="显示方式"><option value="cover" ${state.wallpaper.fit === "cover" ? "selected" : ""}>填充屏幕</option><option value="contain" ${state.wallpaper.fit === "contain" ? "selected" : ""}>适应屏幕</option><option value="repeat" ${state.wallpaper.fit === "repeat" ? "selected" : ""}>平铺</option><option value="center" ${state.wallpaper.fit === "center" ? "selected" : ""}>居中</option></select>
           <div class="actions"><button type="button" class="btn primary" data-apply-wallpaper>应用壁纸</button><button type="button" class="btn" data-random-wallpaper>随机一张</button></div>
         </aside>
+        ${pending ? '<div class="wallpaper-mobile-actions"><button type="button" class="btn primary" data-apply-wallpaper>应用壁纸</button></div>' : ""}
       </div>`;
   }
 
@@ -1785,6 +1958,7 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
       { group: "系统", label: state.tiled ? "关闭平铺模式" : "开启平铺模式", hint: "窗口布局", icon: "tile", action: () => toggleTiled() },
       ...[1, 2, 3].map(id => ({ group: "系统", label: `切换到工作区 ${id}`, hint: id === state.workspace ? "当前工作区" : "保留该工作区的窗口布局", icon: "grid", action: () => switchWorkspace(id) })),
       { group: "系统", label: "打开截止通知", hint: `${urgentEvents().length} 条临近节点`, icon: "bell", action: () => toggleNotifications(true) },
+      { group: "帮助", label: "使用指引", hint: "快捷键与手机导航", icon: "docs", action: () => openOnboarding() },
       ...Object.entries(THEMES).map(([id, theme]) => ({ group: "外观", label: `使用 ${theme.name}`, hint: `${theme.note}${id === state.theme ? " · 当前主题" : ""}`, icon: "wallpaper", action: () => setTheme(id) })),
       { group: "桌面", label: state.upcomingVisible ? "隐藏下一节点组件" : "显示下一节点组件", hint: "桌面组件", icon: "calendar", action: () => toggleUpcoming() },
     ];
@@ -1812,6 +1986,7 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
   let rofiReturnFocus = null;
   function openRofi() {
     if (state.rofiOpen) return;
+    if (state.onboardingOpen) closeOnboarding({ restore: false });
     rofiReturnFocus = document.activeElement;
     state.rofiOpen = true;
     state.rofiIndex = 0;
@@ -1844,6 +2019,9 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
   });
   window.addEventListener("popstate", handlePopState);
   document.addEventListener("click", event => {
+    const onboardingTrigger = event.target.closest("[data-open-onboarding]");
+    if (onboardingTrigger) { openOnboarding({ trigger: onboardingTrigger }); return; }
+    if (event.target.closest("[data-onboarding-dismiss]")) { closeOnboarding(); return; }
     const external = event.target.closest("[data-external]");
     if (external) {
       window.open(external.dataset.external, "_blank", "noopener");
@@ -1880,9 +2058,11 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
     const agendaTab = event.target.closest("[data-agenda-tab]");
     if (agendaTab) { state.agendaTab = agendaTab.dataset.agendaTab; refreshAgenda(); return; }
     if (event.target.closest("[data-agenda-saved]")) { state.savedOnly = !state.savedOnly; refreshAgenda(); refreshContests(); syncUrl(); return; }
-    if (event.target.closest("[data-agenda-prev]")) { state.agendaMonth = new Date(state.agendaMonth.getFullYear(), state.agendaMonth.getMonth() - 1, 1); refreshAgenda(); return; }
-    if (event.target.closest("[data-agenda-next]")) { state.agendaMonth = new Date(state.agendaMonth.getFullYear(), state.agendaMonth.getMonth() + 1, 1); refreshAgenda(); return; }
-    if (event.target.closest("[data-agenda-today]")) { const now = new Date(); state.agendaMonth = new Date(now.getFullYear(), now.getMonth(), 1); refreshAgenda(); return; }
+    if (event.target.closest("[data-agenda-prev]")) { moveAgendaMonth(-1); return; }
+    if (event.target.closest("[data-agenda-next]")) { moveAgendaMonth(1); return; }
+    if (event.target.closest("[data-agenda-today]")) { selectAgendaToday(); return; }
+    const agendaDate = event.target.closest("[data-agenda-date]");
+    if (agendaDate) { state.agendaSelectedDate = agendaDate.dataset.agendaDate; refreshAgenda(); $(`[data-agenda-date="${state.agendaSelectedDate}"]`)?.focus({ preventScroll: true }); return; }
     const detailOpen = event.target.closest("[data-open-detail]");
     if (detailOpen) { openDetail(detailOpen.dataset.openDetail); return; }
     if (event.target.closest("[data-refresh-board]")) { loadBoard(); return; }
@@ -1900,6 +2080,13 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
     if (event.target.closest("[data-test-push]")) { sendBrowserNotification("赛线通知测试", `${urgentEvents().length} 个临近节点`, "contestline-test"); return; }
     if (event.target.closest("[data-copy-ics]")) { copyText(`${ONLINE_ORIGIN}/api/v1/ical/all.ics`, "ICS 地址"); return; }
     if (event.target.closest("[data-copy-api]")) { copyText(`${ONLINE_ORIGIN}/api/v1`, "API 地址"); return; }
+    const copyEvent = event.target.closest("[data-copy-event]");
+    if (copyEvent) {
+      const url = new URL(location.href);
+      url.searchParams.set("event", copyEvent.dataset.copyEvent);
+      copyText(url.toString(), "赛事链接");
+      return;
+    }
     const docTab = event.target.closest("[data-doc-tab]");
     if (docTab) {
       state.docTab = docTab.dataset.docTab;
@@ -1907,6 +2094,9 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
       $(`[data-doc-tab="${state.docTab}"]`)?.focus();
       return;
     }
+    const mobileOpen = event.target.closest("[data-mobile-open]");
+    if (mobileOpen) { openFromEvent(mobileOpen.dataset.mobileOpen); return; }
+    if (event.target.closest("[data-mobile-home]")) { showMobileHome(); return; }
     const open = event.target.closest("[data-open]");
     if (open) { openFromEvent(open.dataset.open); return; }
     const workspace = event.target.closest("[data-workspace]");
@@ -1917,6 +2107,7 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
       if (!selection || selection.isCollapsed) $("#terminalInput")?.focus({ preventScroll: true });
     }
     if (event.target.closest("#tileToggle")) { toggleTiled(); return; }
+    if (event.target.closest("#syncRetry")) { loadLiveEvents({ manual: true }); return; }
     if (event.target.closest("#notificationTrigger")) { toggleNotifications(); return; }
     if (event.target.closest("[data-close-notifications]")) { toggleNotifications(false); $("#notificationTrigger").focus(); return; }
     if (event.target.closest("[data-read-all]")) {
@@ -2028,6 +2219,11 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
         if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
       }
+      return;
+    }
+    if (state.onboardingOpen && event.key === "Escape") {
+      event.preventDefault();
+      closeOnboarding();
       return;
     }
     if (event.target.id === "terminalInput" && event.key === "Tab") {
@@ -2225,29 +2421,36 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
     openPendingEvent(false);
   }
 
-  async function loadLiveEvents() {
-    if (!API_ENABLED) return;
+  const loadEvents = globalThis.ContestEventSync.createEventLoader({ normalize: normalizeLiveEvent });
+
+  async function loadLiveEvents({ manual = false } = {}) {
+    if (!API_ENABLED || syncStatus === "syncing") return;
+    syncStatus = "syncing";
+    updateShellCounts();
     try {
-      const first = await fetch("/api/v1/editions?size=100&page=1", { cache: "no-store" });
-      if (!first.ok) return;
-      const head = await first.json();
-      const pages = Math.max(1, Number(head.pages) || 1);
-      const rest = pages > 1
-        ? await Promise.all(Array.from({ length: pages - 1 }, (_, index) => fetch(`/api/v1/editions?size=100&page=${index + 2}`, { cache: "no-store" }).then((response) => response.ok ? response.json() : null).catch(() => null)))
-        : [];
-      const items = [head, ...rest].filter(Boolean).flatMap((page) => Array.isArray(page.items) ? page.items : []).map(normalizeLiveEvent);
-      if (!items.length) return;
-      DEMO_EVENTS = items;
+      const result = await loadEvents();
+      DEMO_EVENTS = result.items;
       DEMO_LIVE = true;
-      DEMO_UPDATED = new Date().toISOString();
+      DEMO_UPDATED = result.fetchedAt;
+      DEMO_LAST_REFRESH = result.lastRefresh;
+      syncStatus = "live";
       refreshAfterLive();
-    } catch { /* keep snapshot */ }
+    } catch (error) {
+      console.error("Event sync failed", error);
+      syncStatus = "error";
+      updateShellCounts();
+      if (manual) toast("同步失败，仍显示上次数据");
+    }
   }
 
+  let bootFinished = false;
   function finishBoot() {
+    if (bootFinished) return;
+    bootFinished = true;
     $("#bootScreen")?.remove();
     $("#os").inert = false;
     try { sessionStorage.setItem("contestline.archos.booted", "1"); } catch { }
+    if (!state.onboardingSeen && !state.pendingEvent && !Object.keys(state.windows).length && !state.rofiOpen) openOnboarding({ automatic: true });
   }
 
   applyUrlState();
@@ -2258,12 +2461,14 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
   updateClock();
   updateShellCounts();
   renderTaskbar();
+  openPendingApp();
   openPendingEvent(false);
   loadLiveEvents();
   updatePresence();
   window.setInterval(updatePresence, 30000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) updatePresence(); });
   window.setInterval(updateClock, 30000);
+  window.addEventListener("resize", () => { renderTaskbar(); refreshContests(); });
   let booted = false;
   try { booted = sessionStorage.getItem("contestline.archos.booted") === "1"; } catch { }
   if (booted || window.matchMedia("(prefers-reduced-motion: reduce)").matches) finishBoot();

@@ -12,7 +12,7 @@
   <link rel="icon" type="image/svg+xml" href="./favicon.svg">
   <link rel="preload" href="./assets/fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="./assets/fonts/JetBrainsMono-Medium.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="./styles.css?v=20261126h">
+  <link rel="stylesheet" href="./styles.css?v=20261127d">
 </head>
 <body>
   <svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -62,7 +62,7 @@
       </div>
       <div class="waybar-island waybar-center"><time class="clock" id="clock">00:00</time></div>
       <div class="waybar-island waybar-right">
-        <span class="snapshot"><span class="snapshot-label">SNAP</span><span id="dataCount">16 场</span></span>
+        <span class="snapshot" id="dataStatus" data-state="snapshot" role="status" aria-live="polite" aria-atomic="true"><span class="snapshot-label">SNAP</span><span id="dataCount">16 场</span><button class="sync-retry" id="syncRetry" type="button" hidden>重试</button></span>
         <span class="presence" id="presence" title="当前在线人数" aria-live="polite"><i aria-hidden="true"></i><b id="onlineCount">2</b><span>online</span></span>
         <button class="bar-button" id="tileToggle" type="button" aria-label="切换平铺模式" aria-pressed="false"><img class="icon papirus-icon" src="./assets/icons/view-grid.svg" alt="" width="16" height="16"></button>
         <button class="bar-button" id="terminalTrigger" type="button" aria-label="打开终端，Ctrl 加反引号"><img class="icon papirus-icon" src="./assets/icons/utilities-terminal.svg" alt="" width="18" height="18"></button>
@@ -79,6 +79,7 @@
       <button class="desktop-icon" type="button" data-external="/cyberchef/" title="打开 CyberChef"><span class="app-icon"><img src="./assets/icons/applications-engineering.svg" alt="" width="48" height="48"></span><span>CyberChef</span></button>
       <button class="desktop-icon" type="button" data-open="terminal"><span class="app-icon"><img src="./assets/icons/utilities-terminal.svg" alt="" width="48" height="48"></span><span>终端</span></button>
       <button class="desktop-icon" type="button" data-open="wallpaper"><span class="app-icon"><img src="./assets/icons/preferences-desktop-wallpaper.svg" alt="" width="48" height="48"></span><span>外观</span></button>
+      <button class="desktop-icon" id="mobileGuide" type="button" data-open-onboarding hidden><span class="app-icon"><img src="./assets/icons/accessories-text-editor.svg" alt="" width="48" height="48"></span><span>指引</span></button>
     </div>
 
     <section class="desktop-clock" aria-label="桌面时钟">
@@ -94,7 +95,34 @@
 
     <div id="windows" class="windows-layer"></div>
 
+    <nav class="phone-nav" aria-label="手机应用导航">
+      <button type="button" data-mobile-home aria-current="page"><img src="./assets/icons/applications-system.svg" alt="" width="22" height="22"><span>首页</span></button>
+      <button type="button" data-mobile-open="contests"><img src="./assets/icons/system-file-manager.svg" alt="" width="22" height="22"><span>赛事</span></button>
+      <button type="button" data-mobile-open="agenda"><img src="./assets/icons/office-calendar.svg" alt="" width="22" height="22"><span>日程</span></button>
+      <button type="button" data-mobile-open="board"><img src="./assets/icons/internet-chat.svg" alt="" width="22" height="22"><span>留言</span></button>
+      <button type="button" data-mobile-open="submit"><img src="./assets/icons/internet-mail.svg" alt="" width="22" height="22"><span>投稿</span></button>
+    </nav>
+
     <div class="desktop-shortcuts" aria-hidden="true"><span><kbd>Ctrl K</kbd> Rofi</span><span><kbd>Ctrl `</kbd> 终端</span><span><kbd>Alt 1–3</kbd> 工作区</span></div>
+
+    <section class="onboarding" id="onboarding" role="dialog" aria-modal="false" aria-labelledby="onboardingTitle" hidden>
+      <header class="onboarding-header">
+        <span class="onboarding-prompt" aria-hidden="true">~ $</span>
+        <h2 id="onboardingTitle">contestline --help</h2>
+        <button class="onboarding-close" type="button" data-onboarding-dismiss aria-label="关闭使用指引"><img src="./assets/icons/window-close.svg" alt="" width="16" height="16"></button>
+      </header>
+      <div class="onboarding-desktop">
+        <div class="onboarding-row"><img src="./assets/icons/system-search.svg" alt="" width="22" height="22"><span class="onboarding-copy"><strong>Rofi 启动器</strong><small>搜索应用、命令与赛事</small></span><kbd>Ctrl K</kbd></div>
+        <div class="onboarding-row"><img src="./assets/icons/utilities-terminal.svg" alt="" width="22" height="22"><span class="onboarding-copy"><strong>终端</strong><small>输入 help 查看命令</small></span><kbd>Ctrl `</kbd></div>
+        <div class="onboarding-row"><img src="./assets/icons/view-grid.svg" alt="" width="22" height="22"><span class="onboarding-copy"><strong>工作区</strong><small>各自保留窗口与布局</small></span><kbd>Alt 1–3</kbd></div>
+      </div>
+      <div class="onboarding-mobile">
+        <div class="onboarding-row"><img src="./assets/icons/applications-system.svg" alt="" width="24" height="24"><strong>点按图标打开应用</strong></div>
+        <div class="onboarding-row"><img src="./assets/icons/view-grid.svg" alt="" width="24" height="24"><strong>底部导航切换首页与常用功能</strong></div>
+        <div class="onboarding-row"><img src="./assets/icons/system-file-manager.svg" alt="" width="24" height="24"><strong>详情动作固定在底部</strong></div>
+      </div>
+      <footer class="onboarding-footer"><span class="onboarding-desktop-recover">Rofi → 使用指引</span><span class="onboarding-mobile-recover">首页「指引」可随时重开</span><button class="btn primary onboarding-done" type="button" data-onboarding-dismiss><span class="onboarding-desktop-label">进入桌面</span><span class="onboarding-mobile-label">开始使用</span></button></footer>
+    </section>
 
     <div class="rofi-scrim" id="rofiScrim" hidden></div>
     <section class="rofi" id="rofi" role="dialog" aria-modal="true" aria-labelledby="rofiTitle" hidden>
@@ -114,6 +142,7 @@
 
   <script src="./data.js?v=20261126f"></script>
   <script src="./vendor/anime.min.js"></script>
-  <script src="./app.js?v=20261127a"></script>
+  <script src="./event-sync.js?v=20261127a"></script>
+  <script src="./app.js?v=20261127g"></script>
 </body>
 </html>
