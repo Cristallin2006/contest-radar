@@ -300,7 +300,8 @@ function serveStatic(req, res, pathname) {
   }
   if (rel === "/os/") rel = "/os/index.html";
   if (rel === "/cyberchef/") rel = "/cyberchef/index.html";
-  if (rel === "/" || rel === "/timeline") rel = "/timeline.html";
+  if (rel === "/") rel = "/home.html";
+  if (rel === "/timeline") rel = "/timeline.html";
   if (rel === "/list") rel = "/index.html";
   if (rel === "/admin") rel = "/admin.html";
   if (rel === "/changes") rel = "/changes.html";

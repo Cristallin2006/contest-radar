@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="wallhaven">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0b0924">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="赛线 OS：以 Arch Rice 为交互参考的模拟电脑，包含赛事、赛程、终端与虚拟工作区。">
+  <title>赛线 OS · Arch Rice</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="preload" href="./assets/fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./assets/fonts/JetBrainsMono-Medium.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./styles.css?v=20261126h">
+</head>
+<body>
+  <svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-command" viewBox="0 0 24 24"><path d="M9 6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3Z"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 19h16"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-wallpaper" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="1.5"/><path d="m21 15-5-5L5 21"/></symbol>
+    <symbol id="i-timeline" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="11" cy="18" r="2"/></symbol>
+    <symbol id="i-tile" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16M12 12h9"/></symbol>
+    <symbol id="i-window" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 9h16"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-maximize" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1"/></symbol>
+  </svg>
+
+  <div class="boot-screen" id="bootScreen" role="status" aria-label="赛线 OS 正在启动">
+    <div class="boot-mark"><span></span><span></span><span></span></div>
+    <div class="boot-name">contestline<span>.os</span></div>
+    <div class="boot-log"><p>[ &nbsp;OK &nbsp;] mounted public contest snapshot</p><p>[ &nbsp;OK &nbsp;] started contest-shell</p><p>[ &nbsp;OK &nbsp;] reached graphical target</p></div>
+    <button type="button" id="skipBoot">跳过启动</button>
+  </div>
+
+  <div class="os" id="os" inert>
+    <div id="wallpaper" class="wallpaper" aria-hidden="true"></div>
+    <div class="desktop-shade" aria-hidden="true"></div>
+
+    <header class="waybar">
+      <div class="waybar-island waybar-left">
+        <button class="os-brand" id="rofiTrigger" type="button" aria-haspopup="dialog" aria-label="打开 Rofi 启动器"><img class="brand-icon" src="./assets/icons/applications-system.svg" alt="" width="22" height="22"><b>赛线</b><small>OS</small></button>
+        <nav class="virtual-workspaces" aria-label="虚拟工作区">
+          <button type="button" data-workspace="1" aria-current="page" aria-label="工作区 1">1</button>
+          <button type="button" data-workspace="2" aria-label="工作区 2">2</button>
+          <button type="button" data-workspace="3" aria-label="工作区 3">3</button>
+        </nav>
+        <span class="waybar-separator"></span>
+        <button class="running-apps" id="runningApps" type="button" aria-label="查看运行中的窗口"><svg class="icon" aria-hidden="true"><use href="#i-window"/></svg><span id="runningCount">0</span></button>
+        <span class="active-window-title" id="activeWindowTitle">desktop</span>
+      </div>
+      <div class="waybar-island waybar-center"><time class="clock" id="clock">00:00</time></div>
+      <div class="waybar-island waybar-right">
+        <span class="snapshot"><span class="snapshot-label">SNAP</span><span id="dataCount">16 场</span></span>
+        <span class="presence" id="presence" title="当前在线人数" aria-live="polite"><i aria-hidden="true"></i><b id="onlineCount">2</b><span>online</span></span>
+        <button class="bar-button" id="tileToggle" type="button" aria-label="切换平铺模式" aria-pressed="false"><img class="icon papirus-icon" src="./assets/icons/view-grid.svg" alt="" width="16" height="16"></button>
+        <button class="bar-button" id="terminalTrigger" type="button" aria-label="打开终端，Ctrl 加反引号"><img class="icon papirus-icon" src="./assets/icons/utilities-terminal.svg" alt="" width="18" height="18"></button>
+        <button class="bar-button notification-button" id="notificationTrigger" type="button" aria-label="查看截止通知" aria-expanded="false"><img class="icon papirus-icon" src="./assets/icons/preferences-system-notifications.svg" alt="" width="18" height="18"><span id="notificationBadge"></span></button>
+        <span class="saved-tray" id="savedTray" title="本地收藏">★ 0</span>
+      </div>
+    </header>
+
+    <div class="desktop-icons" aria-label="桌面应用">
+      <button class="desktop-icon" type="button" data-open="contests"><span class="app-icon"><img src="./assets/icons/system-file-manager.svg" alt="" width="48" height="48"></span><span>赛事</span></button>
+      <button class="desktop-icon" type="button" data-open="agenda"><span class="app-icon"><img src="./assets/icons/office-calendar.svg" alt="" width="48" height="48"></span><span>日程</span></button>
+      <button class="desktop-icon" type="button" data-open="board"><span class="app-icon"><img src="./assets/icons/internet-chat.svg" alt="" width="48" height="48"></span><span>留言板</span></button>
+      <button class="desktop-icon" type="button" data-open="submit"><span class="app-icon"><img src="./assets/icons/internet-mail.svg" alt="" width="48" height="48"></span><span>投稿</span></button>
+      <button class="desktop-icon" type="button" data-external="/cyberchef/" title="打开 CyberChef"><span class="app-icon"><img src="./assets/icons/applications-engineering.svg" alt="" width="48" height="48"></span><span>CyberChef</span></button>
+      <button class="desktop-icon" type="button" data-open="terminal"><span class="app-icon"><img src="./assets/icons/utilities-terminal.svg" alt="" width="48" height="48"></span><span>终端</span></button>
+      <button class="desktop-icon" type="button" data-open="wallpaper"><span class="app-icon"><img src="./assets/icons/preferences-desktop-wallpaper.svg" alt="" width="48" height="48"></span><span>外观</span></button>
+    </div>
+
+    <section class="desktop-clock" aria-label="桌面时钟">
+      <time id="desktopTime">16:30</time>
+      <span id="desktopDate">11 月 25 日 · 周三</span>
+    </section>
+
+    <aside class="desktop-upcoming" id="upcomingWidget" aria-label="临近赛事">
+      <header><span>下一节点</span><div class="widget-actions"><button type="button" data-open="agenda">全部</button><button class="widget-close" type="button" data-close-upcoming aria-label="关闭下一节点组件"><img class="icon" src="./assets/icons/window-close.svg" alt="" width="13" height="13"></button></div></header>
+      <div id="upcomingList"></div>
+      <footer id="dataFreshness">公开快照 · 2026-11-25</footer>
+    </aside>
+
+    <div id="windows" class="windows-layer"></div>
+
+    <div class="desktop-shortcuts" aria-hidden="true"><span><kbd>Ctrl K</kbd> Rofi</span><span><kbd>Ctrl `</kbd> 终端</span><span><kbd>Alt 1–3</kbd> 工作区</span></div>
+
+    <div class="rofi-scrim" id="rofiScrim" hidden></div>
+    <section class="rofi" id="rofi" role="dialog" aria-modal="true" aria-labelledby="rofiTitle" hidden>
+      <h1 class="sr-only" id="rofiTitle">Rofi 启动器</h1>
+      <div class="rofi-input"><img class="icon papirus-icon" src="./assets/icons/system-search.svg" alt="" width="20" height="20"><input id="rofiInput" role="combobox" aria-autocomplete="list" aria-controls="rofiResults" aria-expanded="true" aria-label="搜索应用、命令或赛事" autocomplete="off" spellcheck="false" placeholder="应用、命令或赛事…"></div>
+      <div class="rofi-results" id="rofiResults" role="listbox" aria-label="启动器结果"></div>
+    </section>
+
+    <aside class="notification-center" id="notificationCenter" aria-label="截止通知" hidden>
+      <header><h1>截止通知</h1><div class="notification-actions"><button type="button" class="icon-button" data-open="push" aria-label="打开推送设置"><img class="icon papirus-icon" src="./assets/icons/preferences-system.svg" alt="" width="17" height="17"></button><button type="button" class="icon-button" data-close-notifications aria-label="关闭通知"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div></header>
+      <div class="notification-toolbar"><span id="notificationSummary"></span><button type="button" data-read-all>全部已读</button></div>
+      <div id="notificationList" class="notification-list"></div>
+    </aside>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden><span id="toastText"></span><button type="button" data-close-toast aria-label="关闭提示"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div>
+  </div>
+
+  <script src="./data.js?v=20261126f"></script>
+  <script src="./vendor/anime.min.js"></script>
+  <script src="./app.js?v=20261127a"></script>
+</body>
+</html>
