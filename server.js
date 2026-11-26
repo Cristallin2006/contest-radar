@@ -31,7 +31,8 @@ import { stageCandidates } from "./ingest.js";
 import { handlePublicApi } from "./public-api.js";
 import { handleAuth } from "./auth.js";
 import { handleAdminApi } from "./admin-api.js";
-import { json } from "./http.js";
+import { json, readJson } from "./http.js";
+import { PRESENCE_WINDOW_SECONDS, touchPresence } from "./presence.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(__dirname, "public");
@@ -372,6 +373,23 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
+    if (pathname === "/api/v1/presence") {
+      if (req.method !== "POST") return json(res, 405, { error: "method not allowed" });
+      let body;
+      try {
+        body = await readJson(req, 2048);
+      } catch (err) {
+        return json(res, err.status || 400, { error: err.message || "invalid body" });
+      }
+      const visitor = String(body.visitor || "").trim();
+      if (!/^[A-Za-z0-9_-]{8,128}$/.test(visitor)) return json(res, 400, { error: "invalid visitor" });
+      const online = touchPresence(visitor);
+      return json(res, 200, {
+        online,
+        display: online + 1,
+        window_seconds: PRESENCE_WINDOW_SECONDS,
+      });
+    }
     if (await handleAuth(req, res, url)) return;
     if (await handlePublicApi(req, res, url, { lastRefresh, refreshing })) return;
     if (await handleAdminApi(req, res, url, {
