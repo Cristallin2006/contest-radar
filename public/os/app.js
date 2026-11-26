@@ -44,7 +44,7 @@
     { id: "twilight", name: "Twilight", cn: "城市暮色", category: "插画", file: "./wallpapers/twilight.jpg?v=20261125c", note: "暮色城市与人物。" },
     { id: "kali-glitch", name: "Kali Glitch", cn: "Kali 故障", category: "Kali", file: "./wallpapers/kali-glitch.jpg?v=20261125c", note: "Kali 2026 官方壁纸。" },
     { id: "kali-hack", name: "Kali Hack", cn: "Kali 黑客", category: "Kali", file: "./wallpapers/kali-hack.jpg?v=20261125c", note: "Kali 2026 官方壁纸。" },
-    { id: "kali-net", name: "Kali Net", cn: "Kali 网络", category: "Kali", file: "./wallpapers/kali-net.jpg?v=20261125c", note: "Kali 2026 官方壁纸；赛线 OS 的默认桌面。" },
+    { id: "kali-net", name: "Kali Net", cn: "Kali 网络", category: "Kali", file: "./wallpapers/kali-net.jpg?v=20261125c", note: "Kali 2026 官方壁纸；赛棍OS 的默认桌面。" },
   ];
 
   const FIT_CSS = {
@@ -67,7 +67,7 @@
     submit: { title: "投稿", path: "~/submit", glyph: "submit", width: 780, height: 700, x: 220, y: 42 },
     push: { title: "推送", path: "~/notifications", glyph: "bell", width: 560, height: 520, x: 360, y: 100 },
     docs: { title: "文档", path: "~/docs", glyph: "docs", width: 840, height: 600, x: 210, y: 60 },
-    terminal: { title: "终端", path: "guest@contestline", glyph: "terminal", width: 780, height: 500, x: 110, y: 70 },
+    terminal: { title: "终端", path: "guest@saigun", glyph: "terminal", width: 780, height: 500, x: 110, y: 70 },
     wallpaper: { title: "外观", path: "~/appearance", glyph: "wallpaper", width: 800, height: 600, x: 250, y: 70 },
   };
 
@@ -921,7 +921,7 @@
   let onboardingExit = null;
 
   function renderOnboarding() {
-    $("#onboardingTitle").textContent = isMobileShell() ? "赛线使用指南" : "contestline --help";
+    $("#onboardingTitle").textContent = isMobileShell() ? "赛棍使用指南" : "saigun --help";
   }
 
   function openOnboarding({ automatic = false, trigger = null } = {}) {
@@ -1281,7 +1281,7 @@
     const day = date => String(date).slice(0, 10).replace(/-/g, "");
     const escapeIcs = value => String(value || "").replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
     const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-    const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Contestline//Arch OS Demo//CN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
+    const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Saigun//Arch OS Demo//CN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
     for (const item of items) {
       const date = dateOf(item);
       if (!date) continue;
@@ -1299,7 +1299,7 @@
     const blob = new Blob([icsText()], { type: "text/calendar;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "contestline-schedule.ics";
+    a.download = "saigun-schedule.ics";
     document.body.append(a);
     a.click();
     a.remove();
@@ -1672,7 +1672,7 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
 
   /* Terminal */
   function promptHtml() {
-    return `<span class="terminal-prompt"><span class="prompt-user">guest</span><span class="prompt-at">@</span><span class="prompt-host">contestline</span><span class="prompt-path">:~$</span></span>`;
+    return `<span class="terminal-prompt"><span class="prompt-user">guest</span><span class="prompt-at">@</span><span class="prompt-host">saigun</span><span class="prompt-path">:~$</span></span>`;
   }
 
   function fetchHtml() {
@@ -1690,11 +1690,11 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
     return `<section class="terminal-fetch native-fetch" aria-label="系统信息">
       <pre class="fetch-logo" aria-hidden="true">${esc(logo)}</pre>
       <div class="fetch-info">
-        <div class="fetch-identity"><span class="fetch-user">guest</span>@<span class="fetch-host">contestline</span></div>
+        <div class="fetch-identity"><span class="fetch-user">guest</span>@<span class="fetch-host">saigun</span></div>
         <section class="fetch-panel">
           <h2 class="fetch-panel-title">Software</h2>
           <dl>
-            <div><dt>OS</dt><dd>Contestline Linux x86_64</dd></div>
+            <div><dt>OS</dt><dd>Saigun Linux x86_64</dd></div>
             <div><dt>Kernel</dt><dd>contest-shell 0.3</dd></div>
             <div><dt>WM</dt><dd>Hyprland · Wayland</dd></div>
             <div><dt>Terminal</dt><dd>kitty · ${state.theme === "wallhaven" ? "JetBrains Mono" : "Cascadia Code"}</dd></div>
@@ -1702,7 +1702,7 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
           </dl>
         </section>
         <section class="fetch-panel">
-          <h2 class="fetch-panel-title">Contestline</h2>
+          <h2 class="fetch-panel-title">Saigun</h2>
           <dl>
             <div><dt>Events</dt><dd>${DEMO_EVENTS.length} public</dd></div>
             <div><dt>Regions</dt><dd>${cn} CN / ${intl} INTL</dd></div>
@@ -1723,7 +1723,7 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
   }
 
   function terminalHtml() {
-    return `<div class="terminal-app"><div class="terminal-scroll" id="terminalScroll"><div class="terminal-output" id="terminalOutput" role="log" aria-live="polite">${state.terminalLines.map(terminalLineHtml).join("")}</div><form class="terminal-form" id="terminalForm"><label class="terminal-prompt" for="terminalInput"><span class="prompt-user">guest</span><span class="prompt-at">@</span><span class="prompt-host">contestline</span><span class="prompt-path">:~$</span></label><input id="terminalInput" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="终端命令"></form></div></div>`;
+    return `<div class="terminal-app"><div class="terminal-scroll" id="terminalScroll"><div class="terminal-output" id="terminalOutput" role="log" aria-live="polite">${state.terminalLines.map(terminalLineHtml).join("")}</div><form class="terminal-form" id="terminalForm"><label class="terminal-prompt" for="terminalInput"><span class="prompt-user">guest</span><span class="prompt-at">@</span><span class="prompt-host">saigun</span><span class="prompt-path">:~$</span></label><input id="terminalInput" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="终端命令"></form></div></div>`;
   }
 
   function scrollTerminal() {
@@ -1855,7 +1855,7 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
         break;
       }
       case "ics":
-        if (exportIcs()) appendTerm("exported contestline-schedule.ics", "success");
+        if (exportIcs()) appendTerm("exported saigun-schedule.ics", "success");
         else appendTerm("no saved contests; use save <id> first", "error");
         break;
       case "desktop": {
@@ -1871,7 +1871,7 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
         break;
       }
       case "pwd": appendTerm("/home/guest"); break;
-      case "uname": appendTerm(arg === "-a" ? "Contestline contest-shell 0.2 x86_64" : "Contestline"); break;
+      case "uname": appendTerm(arg === "-a" ? "Saigun contest-shell 0.2 x86_64" : "Saigun"); break;
       case "date": appendTerm(new Date().toString()); break;
       case "whoami": appendTerm("guest"); break;
       case "clear": clearTerminal(); break;
@@ -2077,7 +2077,7 @@ GET /api/v1/ical/category/mathmodel.ics</code></pre><div class="doc-actions"><bu
       $('[data-push-saved]')?.focus();
       return;
     }
-    if (event.target.closest("[data-test-push]")) { sendBrowserNotification("赛线通知测试", `${urgentEvents().length} 个临近节点`, "contestline-test"); return; }
+    if (event.target.closest("[data-test-push]")) { sendBrowserNotification("赛棍通知测试", `${urgentEvents().length} 个临近节点`, "contestline-test"); return; }
     if (event.target.closest("[data-copy-ics]")) { copyText(`${ONLINE_ORIGIN}/api/v1/ical/all.ics`, "ICS 地址"); return; }
     if (event.target.closest("[data-copy-api]")) { copyText(`${ONLINE_ORIGIN}/api/v1`, "API 地址"); return; }
     const copyEvent = event.target.closest("[data-copy-event]");

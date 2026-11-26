@@ -1,4 +1,4 @@
-# 赛线 OS · Arch Rice
+# 赛棍OS · Arch Rice
 
 模拟 Arch 电脑的竞赛 OS 静态 Demo。首屏为真实虚拟桌面，业务功能以独立应用窗口存在；不是三栏工作站。
 
@@ -16,7 +16,7 @@
 - 顶栏平铺按钮在浮动与自动平铺之间切换，使用 Anime.js 完成可中断的 FLIP 重排。
 - 桌面、窗口和系统控件使用本地 Papirus 图标，不依赖运行时 CDN。
 - 默认主题为 Wallhaven / Omarchy：三段分岛顶栏、雾玫瑰焦点边框、透明模糊窗口、紧凑 Linux 标题栏与本地 JetBrains Mono。赛事采用位置栏、目录侧栏与列表/表格切换；表格为默认视图，标题换行保留完整文字，其他应用共用原生分隔线和控件。
-- 三套主题均使用 Software / Contestline 框线式 fastfetch，信息来自真实赛事与工作区状态，不包含虚构硬件数据。Afterglow 和 Atelier Sulphurpool 可从外观、Rofi 或终端 `theme <wallhaven|afterglow|atelier>` 切换；`theme omarchy` 是 Wallhaven 的别名。
+- 三套主题均使用 Software / Saigun 框线式 fastfetch，信息来自真实赛事与工作区状态，不包含虚构硬件数据。Afterglow 和 Atelier Sulphurpool 可从外观、Rofi 或终端 `theme <wallhaven|afterglow|atelier>` 切换；`theme omarchy` 是 Wallhaven 的别名。
 - 三套主题共享分岛栏、透明窗口、紧凑标题栏、原生应用控件与框线 fastfetch；窗口和终端颜色仍由各自 token 决定。Wallhaven 应用表面已中性化，玫瑰色仅用于少量焦点，终端保持原有 Kitty 配色。
 - Rofi 搜索应用、运行窗口、工作区命令和赛事。
 - 「日程」合并时间线和月历：同一窗口切换「时间线 / 日历」，收藏筛选与 ICS 导出共用。桌面月历保留格内标题；手机月历只显示日期和赛事数量，选日后在下方当日列表打开详情。桌面不再分别保留时间线和赛程两个图标。

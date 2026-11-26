@@ -381,7 +381,7 @@ test("desktop first visit shows a non-modal Rofi guide without stealing focus", 
   assert.equal(await evaluate('document.querySelector("#onboarding").getAttribute("aria-modal")'), "false");
   assert.equal(await evaluate('document.querySelector("#onboarding").contains(document.activeElement)'), false);
   assert.equal(await evaluate('document.querySelectorAll(".window").length'), 0);
-  assert.match(await evaluate('document.querySelector("#onboardingTitle").textContent'), /contestline --help/);
+  assert.match(await evaluate('document.querySelector("#onboardingTitle").textContent'), /saigun --help/);
   assert.equal(await evaluate('document.querySelectorAll(".onboarding-desktop .onboarding-row").length'), 3);
   await screenshot("onboarding-desktop");
   await evaluate('document.querySelector("[data-onboarding-dismiss]").click()');
