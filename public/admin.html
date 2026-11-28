@@ -4,20 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex,nofollow" />
-  <meta name="color-scheme" content="only light" />
-  <title>竞赛雷达 · 管理后台</title>
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#0b0f14" />
+  <title>赛棍OS · 管理控制台</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="/style.css?v=20261123e" />
-  <link rel="stylesheet" href="/admin.css?v=20261123e" />
+  <link rel="stylesheet" href="/admin.css?v=20261128b" />
 </head>
 <body class="admin-body">
   <header class="admin-top">
     <a class="admin-brand" href="/">
-      <span class="admin-mark"></span>
-      <span><strong>竞赛雷达</strong><small>ADMIN · v0.2-anon</small></span>
+      <span class="admin-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span><strong>赛棍OS</strong><small>ADMIN CONSOLE / ~/admin</small></span>
     </a>
     <div class="admin-top-actions">
-      <a class="ghost-btn" href="/" target="_blank" rel="noreferrer">打开公开站</a>
+      <span class="admin-live"><i></i>TOKEN</span>
+      <a class="ghost-btn" href="/" target="_blank" rel="noreferrer">打开桌面</a>
       <button id="logoutBtn" class="ghost-btn hidden" type="button">退出令牌</button>
     </div>
   </header>
@@ -25,8 +27,9 @@
   <main id="loginView" class="login-wrap">
     <section class="login-card">
       <p class="eyebrow">ADMIN TOKEN</p>
-      <h1>管理员入口</h1>
+      <h1>管理控制台</h1>
       <p class="muted">没有账号体系。输入环境变量里的 <code>ADMIN_TOKEN</code>，令牌只保存在本标签页的 sessionStorage。</p>
+      <p class="login-path">~/admin <span>需要管理员令牌</span></p>
       <form id="loginForm" class="login-form">
         <label for="tokenInput">管理员令牌</label>
         <input id="tokenInput" name="token" type="password" autocomplete="current-password" placeholder="至少 32 字节随机令牌" required />
@@ -37,6 +40,7 @@
   </main>
 
   <main id="adminView" class="admin-shell hidden">
+    <div class="admin-layout">
     <nav class="admin-tabs" aria-label="管理模块">
       <button class="admin-tab active" data-tab="overview" type="button">概览</button>
       <button class="admin-tab" data-tab="pending" type="button">待审核 <span id="pendingBadge" class="badge hidden">0</span></button>
@@ -48,6 +52,7 @@
       <button class="admin-tab" data-tab="audit" type="button">审计与变更</button>
     </nav>
 
+    <div class="admin-content">
     <section id="panel-overview" class="admin-panel">
       <div class="panel-heading">
         <div><p class="eyebrow">OVERVIEW</p><h2>运行状态</h2></div>
@@ -199,6 +204,8 @@
         </section>
       </div>
     </section>
+    </div>
+    </div>
   </main>
 
   <div id="editorOverlay" class="editor-overlay hidden" role="dialog" aria-modal="true" aria-label="编辑赛事">
